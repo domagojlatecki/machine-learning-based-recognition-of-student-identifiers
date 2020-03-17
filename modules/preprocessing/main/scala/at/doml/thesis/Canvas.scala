@@ -7,13 +7,15 @@ import scala.collection.immutable.ArraySeq
 
 final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
 
+  val linear: ArraySeq[RgbColor] = p
+
   def writeTo(path: Path): Unit = {
     val out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
     out.setRGB(0, 0, w, h, p.toArray.map(_.toInt), 0, w)
     ImageIO.write(out, "PNG", path.toFile)
   }
 
-  def map(f: Pixel => RgbColor): Canvas = {
+  def mapPixels(f: Pixel => RgbColor): Canvas = {
     val np = p.zipWithIndex.map { case (c, i) =>
       val x = i % w
       val y = i / w
@@ -21,6 +23,10 @@ final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
     }
 
     new Canvas(np, w, h)
+  }
+
+  def map(f: RgbColor => RgbColor): Canvas = {
+    new Canvas(p.map(f), w, h)
   }
 }
 
