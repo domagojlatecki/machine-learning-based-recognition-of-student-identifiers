@@ -8,6 +8,7 @@ import scala.collection.immutable.ArraySeq
 final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
 
   val linear: ArraySeq[RgbColor] = p
+  val area: Int = w * h
 
   def writeTo(path: Path): Unit = {
     val out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
@@ -27,6 +28,20 @@ final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
 
   def map(f: RgbColor => RgbColor): Canvas = {
     new Canvas(p.map(f), w, h)
+  }
+
+  def mapGrouped(xn: Int, yn: Int)(f: ArraySeq[RgbColor] => RgbColor): Canvas = {
+    val area = for {
+      yRange <- 0 until h grouped yn
+      xRange <- 0 until w grouped xn
+    } yield for {
+      x <- xRange.to(ArraySeq)
+      y <- yRange
+    } yield {
+      p(y * w + x)
+    }
+
+    new Canvas(area.map(f).to(ArraySeq), (w.toDouble / xn).ceil.toInt, (h.toDouble / yn).ceil.toInt)
   }
 }
 

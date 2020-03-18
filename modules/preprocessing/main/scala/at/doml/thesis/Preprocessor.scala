@@ -14,13 +14,29 @@ object Preprocessor {
   def main(args: Array[String]): Unit = {
     val grayscaled = Canvas.fromPath(Paths.get("in.png"))
       .map(grayscale)
+
     val intensities = grayscaled.linear.map(intensity)
     val minIntensity = intensities.min
     val maxIntensity = intensities.max
     val cutoffPoint = (maxIntensity - minIntensity) / 2.0
 
-    grayscaled.map { c =>
+    val contrasted = grayscaled.map { c =>
       if (intensity(c) > cutoffPoint) RgbColor.White else RgbColor.Black
-    }.writeTo(Paths.get("out.png"))
+    }
+
+    var pixelized = contrasted
+
+    while (pixelized.area > 5000) {
+      pixelized = pixelized.mapGrouped(2, 2){ block =>
+        val sum = block.map {
+          case RgbColor.Black => 1
+          case _              => 0
+        }.sum
+
+        if (sum > 1) RgbColor.Black else RgbColor.White
+      }
+    }
+
+    pixelized.writeTo(Paths.get("out.png"))
   }
 }
