@@ -1,6 +1,7 @@
 package at.doml.thesis
 
-import java.nio.file.Paths
+import java.nio.file.Path
+import scala.util.{Failure, Success, Try}
 
 object Preprocessor {
 
@@ -11,8 +12,8 @@ object Preprocessor {
 
   def intensity(c: RgbColor): Int = c.r + c.g + c.b
 
-  def main(args: Array[String]): Unit = {
-    val grayscaled = Canvas.fromPath(Paths.get("in.png"))
+  def apply(path: Path): Try[Canvas] = {
+    val grayscaled = Canvas.fromPath(path)
       .map(grayscale)
 
     val intensities = grayscaled.linear.map(intensity)
@@ -37,6 +38,10 @@ object Preprocessor {
       }
     }
 
-    pixelized.writeTo(Paths.get("out.png"))
+    if (pixelized.linear.count(_ == RgbColor.Black) < 50) {
+      Failure(new RuntimeException("Too low entropy image"))
+    } else {
+      Success(pixelized)
+    }
   }
 }

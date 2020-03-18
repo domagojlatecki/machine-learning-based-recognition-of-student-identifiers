@@ -147,7 +147,7 @@ trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
   }
 
   def coverage() = T.command {
-    Task.sequence(
+    T.sequence(
       Seq(test().map(_ => ()), scoverage.htmlReport(), scoverage.xmlReport())
     )
   }
@@ -158,6 +158,10 @@ trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
  * * * * * */
 
 object preprocessing extends ScalaModule
+
+object recognition extends ScalaModule {
+  override def moduleDeps = Seq(preprocessing)
+}
 
 private val allModules = Seq[ScalaModule](
   preprocessing
