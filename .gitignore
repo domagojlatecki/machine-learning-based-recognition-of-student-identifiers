@@ -3,6 +3,9 @@
 .idea_modules
 *.iml
 
+# Data files
+data/
+
 # Output files
 out/
 
