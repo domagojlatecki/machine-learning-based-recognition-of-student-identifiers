@@ -10,6 +10,7 @@ final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
 
   val linear: ArraySeq[Color] = p
   val area: Int = w * h
+  val width: Int = w
 
   def writeTo(path: Path): Unit = {
     val out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
@@ -43,6 +44,25 @@ final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
     }
 
     new Canvas(area.map(f).to(ArraySeq), (w.toDouble / xn).ceil.toInt, (h.toDouble / yn).ceil.toInt)
+  }
+
+  def fromColumns(xMin: Int, xMax: Int): Canvas = {
+    val columns = for {
+      x <- xMin until xMax
+    } yield for {
+      y <- (0 until h).to(ArraySeq)
+    } yield {
+      p(y * w + x)
+    }
+
+    val out = for {
+      y <- 0 until h
+      x <- 0 until (xMax - xMin)
+    } yield {
+      columns(x)(y)
+    }
+
+    new Canvas(out.to(ArraySeq), xMax - xMin, h)
   }
 }
 
