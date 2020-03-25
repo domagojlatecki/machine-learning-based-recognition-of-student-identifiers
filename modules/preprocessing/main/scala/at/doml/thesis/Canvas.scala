@@ -5,9 +5,10 @@ import java.nio.file.Path
 import javax.imageio.ImageIO
 import scala.collection.immutable.ArraySeq
 
-final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
+// TODO refactor
+final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
 
-  val linear: ArraySeq[RgbColor] = p
+  val linear: ArraySeq[Color] = p
   val area: Int = w * h
 
   def writeTo(path: Path): Unit = {
@@ -16,7 +17,7 @@ final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
     ImageIO.write(out, "PNG", path.toFile)
   }
 
-  def mapPixels(f: Pixel => RgbColor): Canvas = {
+  def mapPixels(f: Pixel => Color): Canvas = {
     val np = p.zipWithIndex.map { case (c, i) =>
       val x = i % w
       val y = i / w
@@ -26,11 +27,11 @@ final class Canvas private (p: ArraySeq[RgbColor], w: Int, h: Int) {
     new Canvas(np, w, h)
   }
 
-  def map(f: RgbColor => RgbColor): Canvas = {
+  def map(f: Color => Color): Canvas = {
     new Canvas(p.map(f), w, h)
   }
 
-  def mapGrouped(xn: Int, yn: Int)(f: ArraySeq[RgbColor] => RgbColor): Canvas = {
+  def mapGrouped(xn: Int, yn: Int)(f: ArraySeq[Color] => Color): Canvas = {
     val area = for {
       yRange <- 0 until h grouped yn
       xRange <- 0 until w grouped xn
@@ -51,7 +52,7 @@ object Canvas {
     val image = ImageIO.read(path.toFile)
     val width = image.getWidth
     val height = image.getHeight
-    val pixels = image.getRGB(0, 0, width, height, null: Array[Int], 0, width).map(RgbColor(_))
+    val pixels = image.getRGB(0, 0, width, height, null: Array[Int], 0, width).map(Color(_))
 
     new Canvas(ArraySeq.unsafeWrapArray(pixels), width, height)
   }
