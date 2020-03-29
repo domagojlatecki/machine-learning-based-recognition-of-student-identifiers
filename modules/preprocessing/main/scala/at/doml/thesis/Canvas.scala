@@ -9,6 +9,13 @@ import scala.collection.immutable.ArraySeq
 final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
 
   val linear: ArraySeq[Color] = p
+  def pixels: ArraySeq[Pixel] = {
+    p.zipWithIndex.map { case (c, i) =>
+      val x = i % w
+      val y = i / w
+      Pixel(c, x, y)
+    }
+  }
   val area: Int = w * h
   val width: Int = w
 
@@ -19,13 +26,7 @@ final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
   }
 
   def mapPixels(f: Pixel => Color): Canvas = {
-    val np = p.zipWithIndex.map { case (c, i) =>
-      val x = i % w
-      val y = i / w
-      f(Pixel(c, x, y))
-    }
-
-    new Canvas(np, w, h)
+    new Canvas(pixels.map(f), w, h)
   }
 
   def map(f: Color => Color): Canvas = {

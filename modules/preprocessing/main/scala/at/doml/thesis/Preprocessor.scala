@@ -1,7 +1,7 @@
 package at.doml.thesis
 
 import java.nio.file.{Path, Paths}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Random, Success, Try}
 
 // TODO refactor
 object Preprocessor {
@@ -21,7 +21,7 @@ object Preprocessor {
 
     def debugWrite(stepName: String)(implicit dd: Option[DebugData]): Canvas = {
       dd.foreach { case DebugData(fileName, debugRoot) =>
-        println(s"[DEBUG] writing [$fileName] - $stepName")
+        println(s"[DEBUG] writing [$fileName] - $stepName (${c.entropy} black pixels)")
         c.writeTo(debugRoot.resolve(s"debug-$stepName").resolve(fileName))
       }
       c
@@ -41,6 +41,15 @@ object Preprocessor {
       }.toList
     val updated = groups.updated(9, (groups(9)._1, canvas.width)) // make sure that entire width is used
     updated.sliding(2).map(_.flatMap { case (a, b) => List(a, b) } ).map(l => (l.min, l.max)).toList
+  }
+
+  def spacing(pixels: Seq[(Int, Int)]): Double = {
+    val distances = for {
+      p1 <- pixels
+      p2 <- pixels
+    } yield Math.sqrt(Math.pow(p1._1 - p2._1, 2.0) + Math.pow(p1._2 - p2._2, 2.0))
+
+    distances.sum / distances.length
   }
 
   def apply(path: Path, debugRoot: Option[Path] = None): Try[Canvas] = {
@@ -84,10 +93,41 @@ object Preprocessor {
     val digitGroups = digits.toSeq
       .sliding(2)
       .zipWithIndex.map { case (d, i) => s"${"_" * i}$d${"_" * (8 - i)}"}
+      .toList
 
-    for ((column, digitGroup) <- columns zip digitGroups) {
+    val groups = for ((column, digitGroup) <- columns zip digitGroups) yield {
       pixelized.fromColumns(column._1, column._2)
         .debugWrite("group")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
+    }
+
+    for ((group, digitGroup) <- groups zip digitGroups) {
+      val blackPixels = group.pixels.filter(_.color == Color.Black)
+
+      if (blackPixels.length < 20) {
+        new RuntimeException(s"Image entropy too low: ${blackPixels.length}") // TODO handle this better!
+      }
+
+      var bestSpacedPixels = blackPixels.take(20).map(p => (p.x, p.y))
+      var bestSpacing = spacing(bestSpacedPixels)
+
+      for (_ <- 0 until 1000) {
+        val randomPixels = Random.shuffle(blackPixels).take(20).map(p => (p.x, p.y))
+        val randomSpacing = spacing(randomPixels)
+
+        if (randomSpacing > bestSpacing) {
+          bestSpacedPixels = randomPixels
+          bestSpacing = randomSpacing
+        }
+      }
+
+      val evenlySpacedPixels = bestSpacedPixels.toSet
+      group.mapPixels { p =>
+        if (evenlySpacedPixels.contains((p.x, p.y))) {
+          p.color
+        } else {
+          Color.White
+        }
+      }.debugWrite("randomized")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
     }
 
     // TODO
