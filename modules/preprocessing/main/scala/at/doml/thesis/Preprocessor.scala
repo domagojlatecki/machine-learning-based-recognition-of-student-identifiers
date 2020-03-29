@@ -52,7 +52,7 @@ object Preprocessor {
     distances.sum / distances.length
   }
 
-  def apply(path: Path, debugRoot: Option[Path] = None): Try[Canvas] = {
+  def apply(path: Path, debugRoot: Option[Path] = None): List[LabeledData] = {
     implicit val debugData: Option[DebugData] = debugRoot.map(DebugData(path.getFileName, _))
 
     val grayscaled = Canvas.fromPath(path)
@@ -100,7 +100,7 @@ object Preprocessor {
         .debugWrite("group")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
     }
 
-    for ((group, digitGroup) <- groups zip digitGroups) {
+    val randomized = for ((group, digitGroup) <- groups zip digitGroups) yield {
       val blackPixels = group.pixels.filter(_.color == Color.Black)
 
       if (blackPixels.length < 20) {
@@ -130,21 +130,35 @@ object Preprocessor {
       }.debugWrite("randomized")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
     }
 
-    // TODO
-    val entropy = pixelized.entropy
+    val imageData = for ((group, digitGroup) <- randomized zip digitGroups) yield {
+      val twoDigitLabel = digitGroup.replaceAll("_", "")
+      val label = (twoDigitLabel(0).toString.toByte, twoDigitLabel(1).toString.toByte)
+      val blackPixels = group.pixels.filter(_.color == Color.Black)
 
-    if (entropy < 50) {
-      Failure(new RuntimeException(s"Image entropy too low: $entropy")) // TODO specific error
-    } else {
-      Success(pixelized)
+      val xMin = blackPixels.map(_.x).min
+      val xMax = blackPixels.map(_.x).max
+      val xDiff = (xMax - xMin).toDouble
+
+      val yMin = blackPixels.map(_.y).min
+      val yMax = blackPixels.map(_.y).max
+      val yDiff = (yMax - yMin).toDouble
+
+      val points = blackPixels.map { p =>
+        val x = (p.x - xMin) / xDiff
+        val y = (p.y - yMin) / yDiff
+        (x, y)
+      }
+
+      LabeledData(label, points.toList)
     }
+
+    imageData
   }
 
   def main(args: Array[String]): Unit = {
     Paths.get("data/input").toFile.listFiles.foreach { f =>
       apply(f.toPath, debugRoot = Some(Paths.get("data/"))) match {
-        case Success(c) => println(s"[INFO] image [$f] preprocessed, entropy: ${c.entropy}")
-        case Failure(e) => println(s"[ERROR] failed to process image [$f]: ${e.getMessage}")
+        case _ => println(s"[INFO] image [$f] preprocessed")
       }
     }
   }
