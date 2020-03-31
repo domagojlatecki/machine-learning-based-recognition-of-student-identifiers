@@ -1,7 +1,7 @@
 package at.doml.thesis
 
 import java.nio.file.{Path, Paths}
-import scala.util.{Failure, Random, Success, Try}
+import scala.util.Random
 
 // TODO refactor
 object Preprocessor {
@@ -104,33 +104,40 @@ object Preprocessor {
       val blackPixels = group.pixels.filter(_.color == Color.Black)
 
       if (blackPixels.length < 20) {
-        new RuntimeException(s"Image entropy too low: ${blackPixels.length}") // TODO handle this better!
-      }
+        println(s"[WARN] Image entropy too low: ${blackPixels.length}, skipping $digitGroup-$name")
+        None // TODO handle this better!
+      } else {
+        var bestSpacedPixels = blackPixels.take(20).map(p => (p.x, p.y))
+        var bestSpacing = spacing(bestSpacedPixels)
 
-      var bestSpacedPixels = blackPixels.take(20).map(p => (p.x, p.y))
-      var bestSpacing = spacing(bestSpacedPixels)
+        for (_ <- 0 until 1000) {
+          val randomPixels = Random.shuffle(blackPixels).take(20).map(p => (p.x, p.y))
+          val randomSpacing = spacing(randomPixels)
 
-      for (_ <- 0 until 1000) {
-        val randomPixels = Random.shuffle(blackPixels).take(20).map(p => (p.x, p.y))
-        val randomSpacing = spacing(randomPixels)
-
-        if (randomSpacing > bestSpacing) {
-          bestSpacedPixels = randomPixels
-          bestSpacing = randomSpacing
+          if (randomSpacing > bestSpacing) {
+            bestSpacedPixels = randomPixels
+            bestSpacing = randomSpacing
+          }
         }
-      }
 
-      val evenlySpacedPixels = bestSpacedPixels.toSet
-      group.mapPixels { p =>
-        if (evenlySpacedPixels.contains((p.x, p.y))) {
-          p.color
-        } else {
-          Color.White
-        }
-      }.debugWrite("randomized")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
+        val evenlySpacedPixels = bestSpacedPixels.toSet
+        val out = group.mapPixels { p =>
+          if (evenlySpacedPixels.contains((p.x, p.y))) {
+            p.color
+          } else {
+            Color.White
+          }
+        }.debugWrite("randomized")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
+
+        Some(out)
+      }
     }
 
-    val imageData = for ((group, digitGroup) <- randomized zip digitGroups) yield {
+    val imageData = for {
+      (groupOption, digitGroup) <- randomized zip digitGroups if groupOption.isDefined
+    } yield {
+      val group = groupOption.get
+
       val twoDigitLabel = digitGroup.replaceAll("_", "")
       val label = (twoDigitLabel(0).toString.toByte, twoDigitLabel(1).toString.toByte)
       val blackPixels = group.pixels.filter(_.color == Color.Black)
