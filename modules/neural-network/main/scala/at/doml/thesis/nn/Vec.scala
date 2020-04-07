@@ -2,9 +2,8 @@ package at.doml.thesis.nn
 
 import scala.collection.immutable.ArraySeq
 import scala.reflect.ClassTag
-import Vec.Size
 
-final class Vec[+A, +S <: Size] private (val underlying: ArraySeq[A]) extends AnyVal {
+final class Vec[+A, S <: Int] private (val underlying: ArraySeq[A]) extends AnyVal {
 
   def length: Int = underlying.length
 
@@ -13,9 +12,7 @@ final class Vec[+A, +S <: Size] private (val underlying: ArraySeq[A]) extends An
 
 object Vec {
 
-  type Size = Int with Singleton
-
   def empty[A : ClassTag]: Vec[A, 0] = new Vec(ArraySeq.empty)
 
-  def fill[A : ClassTag, S <: Size](n: S)(elem: => A): Vec[A, S] = new Vec(ArraySeq.fill(n)(elem))
+  def fill[A : ClassTag](n: Int)(elem: => A): Vec[A, n.type] = new Vec(ArraySeq.fill(n)(elem))
 }

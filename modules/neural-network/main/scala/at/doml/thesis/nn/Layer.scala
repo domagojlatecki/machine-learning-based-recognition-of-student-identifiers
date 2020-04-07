@@ -1,8 +1,6 @@
 package at.doml.thesis.nn
 
-import Vec.Size
-
-final case class Layer[In <: Size, Out <: Size](neurons: Vec[Neuron[In], Out]) {
+final case class Layer[In <: Int, Out <: Int](neurons: Vec[Neuron[In], Out]) {
 
   def out(in: Vec[Double, In]): Vec[Double, Out] =
     neurons.map(_.out(in))
@@ -10,6 +8,6 @@ final case class Layer[In <: Size, Out <: Size](neurons: Vec[Neuron[In], Out]) {
 
 object Layer {
 
-  def random[In <: Size, Out <: Size](inputs: In, outputs: Out, wRange: (Double, Double)): Layer[In, Out] =
+  def random(inputs: Int, outputs: Int, wRange: (Double, Double)): Layer[inputs.type, outputs.type] =
     Layer(Vec.fill(outputs)(Neuron.random(inputs, wRange)))
 }

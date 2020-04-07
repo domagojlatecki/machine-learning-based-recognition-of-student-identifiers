@@ -1,14 +1,13 @@
 package at.doml.thesis.nn
 
-import at.doml.thesis.nn.Vec.Size
 import scala.annotation.tailrec
 
-sealed trait NeuralNetwork[In <: Size, Out <: Size] extends Product with Serializable {
+sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializable {
 
   final def out(in: Vec[Double, In]): Vec[Double, Out] = {
 
     @tailrec
-    def loop[I <: Size, O <: Size](nn: NeuralNetwork[I, O], v: Vec[Double, I]): Vec[Double, O] = {
+    def loop[I <: Int, O <: Int](nn: NeuralNetwork[I, O], v: Vec[Double, I]): Vec[Double, O] = {
       nn match {
         case NeuralNetwork.SingleLayer(layer)       => layer.out(v)
         case NeuralNetwork.ForwardPass(first, rest) => loop(rest, first.out(v))
@@ -21,21 +20,21 @@ sealed trait NeuralNetwork[In <: Size, Out <: Size] extends Product with Seriali
 
 object NeuralNetwork {
 
-  final case class SingleLayer[In <: Size, Out <: Size](layer: Layer[In, Out]) extends NeuralNetwork[In, Out]
+  final case class SingleLayer[In <: Int, Out <: Int](layer: Layer[In, Out]) extends NeuralNetwork[In, Out]
 
-  final case class ForwardPass[In <: Size, Mid <: Size, Out <: Size](
+  final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](
     first: Layer[In, Mid],
     rest:  NeuralNetwork[Mid, Out]
   ) extends NeuralNetwork[In, Out]
 
-  def random[In <: Size, Out <: Size](
-    inputs:  In,
+  def random(
+    inputs:  Int,
     middle:  List[Int],
-    outputs: Out,
+    outputs: Int,
     wRange:  (Double, Double)
-  ): NeuralNetwork[In, Out] = {
+  ): NeuralNetwork[inputs.type, outputs.type] = {
 
-    def loop[I <: Size](in:  I, mid: List[Int]): NeuralNetwork[I, Out] = mid match {
+    def loop(in: Int, mid: List[Int]): NeuralNetwork[in.type, outputs.type] = mid match {
       case Nil    => SingleLayer(Layer.random(in, outputs, wRange))
       case h :: t => ForwardPass(Layer.random(in, h, wRange), loop(h, t))
     }
