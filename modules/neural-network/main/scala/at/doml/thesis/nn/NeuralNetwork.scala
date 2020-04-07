@@ -33,12 +33,18 @@ object NeuralNetwork {
     outputs: Int,
     wRange:  (Double, Double)
   ): NeuralNetwork[inputs.type, outputs.type] = {
+    type In  = inputs.type
+    type Out = outputs.type
 
-    def loop(in: Int, mid: List[Int]): NeuralNetwork[in.type, outputs.type] = mid match {
-      case Nil    => SingleLayer(Layer.random(in, outputs, wRange))
-      case h :: t => ForwardPass(Layer.random(in, h, wRange), loop(h, t))
+    @tailrec
+    def loop(m: Int, mid: List[Int])(acc: NeuralNetwork[m.type, Out]): NeuralNetwork[In, Out] = mid match {
+      case Nil    => ForwardPass(Layer.random(inputs, m, wRange), acc)
+      case h :: t => loop(h, t)(ForwardPass(Layer.random(h, m, wRange), acc))
     }
 
-    loop(inputs, middle)
+    middle.reverse match {
+      case Nil    => SingleLayer(Layer.random(inputs, outputs, wRange))
+      case h :: t => loop(h, t)(SingleLayer(Layer.random(h, outputs, wRange)))
+    }
   }
 }
