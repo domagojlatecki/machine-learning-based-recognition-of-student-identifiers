@@ -161,7 +161,9 @@ object preprocessing extends ScalaModule
 
 object `neural-network` extends ScalaModule
 
-object `gradient-descent` extends ScalaModule
+object `gradient-descent` extends ScalaModule {
+  override def moduleDeps = Seq(`neural-network`)
+}
 
 private val allModules = Seq[ScalaModule](
   preprocessing,

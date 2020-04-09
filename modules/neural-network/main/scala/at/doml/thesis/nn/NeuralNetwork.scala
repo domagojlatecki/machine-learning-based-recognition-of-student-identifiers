@@ -9,8 +9,8 @@ sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializa
     @tailrec
     def loop[I <: Int, O <: Int](nn: NeuralNetwork[I, O], v: Vec[Double, I]): Vec[Double, O] = {
       nn match {
-        case NeuralNetwork.SingleLayer(layer)       => layer.out(v)
         case NeuralNetwork.ForwardPass(first, rest) => loop(rest, first.out(v))
+        case NeuralNetwork.SingleLayer(layer)       => layer.out(v)
       }
     }
 
@@ -38,13 +38,13 @@ object NeuralNetwork {
 
     @tailrec
     def loop(m: Int, mid: List[Int])(acc: NeuralNetwork[m.type, Out]): NeuralNetwork[In, Out] = mid match {
-      case Nil    => ForwardPass(Layer.random(inputs, m, wRange), acc)
       case h :: t => loop(h, t)(ForwardPass(Layer.random(h, m, wRange), acc))
+      case Nil    => ForwardPass(Layer.random(inputs, m, wRange), acc)
     }
 
     middle.reverse match {
-      case Nil    => SingleLayer(Layer.random(inputs, outputs, wRange))
       case h :: t => loop(h, t)(SingleLayer(Layer.random(h, outputs, wRange)))
+      case Nil    => SingleLayer(Layer.random(inputs, outputs, wRange))
     }
   }
 }
