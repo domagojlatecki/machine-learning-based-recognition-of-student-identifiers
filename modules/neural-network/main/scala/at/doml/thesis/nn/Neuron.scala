@@ -5,12 +5,10 @@ import at.doml.thesis.util.Vec
 final case class Neuron[In <: Int](w: Vec[Double, In], w0: Double) {
 
   def out(in: Vec[Double, In]): Double = {
-    val wArr = w.underlying
-    val inArr = in.underlying
-
     var sum = 0.0
-    for (i <- wArr.indices) {
-      sum += inArr(i) * wArr(i)
+
+    for (i <- w.indices) {
+      sum += in(i) * w(i)
     }
 
     val net = sum + w0

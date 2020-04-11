@@ -7,6 +7,8 @@ final class Vec[+A, S <: Int] private (val underlying: ArraySeq[A]) extends AnyV
 
   def length: Int = underlying.length
 
+  def indices: Range = underlying.indices
+
   def apply(i: Int): A = underlying(i)
 
   def map[B : ClassTag](f: A => B): Vec[B, S] = new Vec(underlying.map(f))

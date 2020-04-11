@@ -73,21 +73,20 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
         val target = s.sample.target
         val initialDelta = layerOutputs(0).mapWithIndex((y, i) => y * (1.0 - y) * (target(i) - y)).underlying
 
-        Vec
-          .iterate((1, initialDelta), NumLayers) {
-            case (layerIndex, previousDelta) =>
-              val layerOut = layerOutputs(layerIndex)
-              val prevLayerNeurons = allNeurons(layerIndex - 1)
-              val deltas = layerOut.mapWithIndex { (y, i) =>
-                var sum = 0.0
-                for (j <- prevLayerNeurons.underlying.indices) {
-                  sum += previousDelta(j) * prevLayerNeurons(j).w(i)
-                }
-                y * (1.0 - y) * sum
-              }.underlying
+        Vec.iterate((1, initialDelta), NumLayers) {
+          case (layerIndex, previousDelta) =>
+            val layerOut = layerOutputs(layerIndex)
+            val prevLayerNeurons = allNeurons(layerIndex - 1)
+            val deltas = layerOut.mapWithIndex { (y, i) =>
+              var sum = 0.0
+              for (j <- prevLayerNeurons.indices) {
+                sum += previousDelta(j) * prevLayerNeurons(j).w(i)
+              }
+              y * (1.0 - y) * sum
+            }.underlying
 
-              (layerIndex + 1, deltas)
-          }.map(t => Vec.unsafeFromIterable(t._2))
+            (layerIndex + 1, deltas)
+        }.map(t => Vec.unsafeFromIterable(t._2))
       }
     }
 
@@ -101,7 +100,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
           val wGrads = neuron.w.mapWithIndex { (_, wIndex) =>
             var sum = 0.0
 
-            for (n <- sampleOutputs.underlying.indices) {
+            for (n <- sampleOutputs.indices) {
               val y = sampleOutputs(n).getInputsForLayer(layerIndex)(wIndex)
               val d = deltas(n)(layerIndex)(neuronIndex)
               sum += d * y
@@ -112,7 +111,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
 
           var w0Grad = 0.0
 
-          for (n <- sampleOutputs.underlying.indices) {
+          for (n <- sampleOutputs.indices) {
             w0Grad += deltas(n)(layerIndex)(neuronIndex)
           }
 
