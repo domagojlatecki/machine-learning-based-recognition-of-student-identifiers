@@ -11,7 +11,7 @@ sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializa
     def loop[I <: Int, O <: Int](nn: NeuralNetwork[I, O], v: Vec[Double, I]): Vec[Double, O] = {
       nn match {
         case NeuralNetwork.ForwardPass(first, rest) => loop(rest, first.out(v))
-        case NeuralNetwork.SingleLayer(layer)       => layer.out(v)
+        case NeuralNetwork.LastLayer(layer)         => layer.out(v)
       }
     }
 
@@ -21,7 +21,7 @@ sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializa
 
 object NeuralNetwork {
 
-  final case class SingleLayer[In <: Int, Out <: Int](layer: Layer[In, Out]) extends NeuralNetwork[In, Out]
+  final case class LastLayer[In <: Int, Out <: Int](layer: Layer[In, Out]) extends NeuralNetwork[In, Out]
 
   final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](
     first: Layer[In, Mid],
@@ -44,8 +44,8 @@ object NeuralNetwork {
     }
 
     middle.reverse match {
-      case h :: t => loop(h, t)(SingleLayer(Layer.random(h, outputs, wRange)))
-      case Nil    => SingleLayer(Layer.random(inputs, outputs, wRange))
+      case h :: t => loop(h, t)(LastLayer(Layer.random(h, outputs, wRange)))
+      case Nil    => LastLayer(Layer.random(inputs, outputs, wRange))
     }
   }
 }

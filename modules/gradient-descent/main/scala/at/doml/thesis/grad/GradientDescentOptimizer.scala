@@ -1,7 +1,7 @@
 package at.doml.thesis.grad
 
 import at.doml.thesis.grad.GradientDescentOptimizer.{NeuronGradients, SampleWithLayerOutputs}
-import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, SingleLayer}
+import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
 import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
 import at.doml.thesis.util.Vec
 import scala.annotation.tailrec
@@ -15,7 +15,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
     def loop(n: NeuralNetwork[_, _], acc: Int): Int = {
       n match {
         case NeuralNetwork.ForwardPass(_, rest) => loop(rest, acc + 1)
-        case NeuralNetwork.SingleLayer(_)       => acc + 1
+        case NeuralNetwork.LastLayer(_)         => acc + 1
       }
     }
 
@@ -45,7 +45,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
             val o = first.out(v)
             loop(rest, o, o :: acc)
 
-          case NeuralNetwork.SingleLayer(layer) =>
+          case NeuralNetwork.LastLayer(layer) =>
             layer.out(v) :: acc
 
         }
@@ -60,7 +60,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
       def loop(n: NeuralNetwork[_, _], acc: List[Vec[Neuron[_], _]]): List[Vec[Neuron[_], _]] = {
         n match {
           case NeuralNetwork.ForwardPass(first, rest) => loop(rest, first.neurons :: acc)
-          case NeuralNetwork.SingleLayer(layer)       => layer.neurons :: acc
+          case NeuralNetwork.LastLayer(layer)         => layer.neurons :: acc
         }
       }
 
@@ -144,7 +144,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
       }
 
       val adjustedNetwork = adjustedLayers.underlying.toList match {
-        case h :: t => loop(t, SingleLayer(h))
+        case h :: t => loop(t, LastLayer(h))
       }
 
       nn = adjustedNetwork.asInstanceOf[NeuralNetwork[In, Out]]
