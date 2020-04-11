@@ -1,5 +1,7 @@
 package at.doml.thesis.nn
 
+import at.doml.thesis.util.Vec
+
 final case class Layer[In <: Int, Out <: Int](neurons: Vec[Neuron[In], Out]) {
 
   def out(in: Vec[Double, In]): Vec[Double, Out] =

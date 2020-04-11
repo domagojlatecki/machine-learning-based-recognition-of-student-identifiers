@@ -157,18 +157,30 @@ trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
  * Modules *
  * * * * * */
 
-object preprocessing extends ScalaModule
+object util extends ScalaModule
 
-object `neural-network` extends ScalaModule
+object preprocessing extends ScalaModule {
+  override def moduleDeps = Seq(util)
+}
+
+object `neural-network` extends ScalaModule {
+  override def moduleDeps = Seq(util)
+}
 
 object `gradient-descent` extends ScalaModule {
   override def moduleDeps = Seq(`neural-network`)
 }
 
+object training extends ScalaModule {
+  override def moduleDeps = Seq(preprocessing, `gradient-descent`)
+}
+
 private val allModules = Seq[ScalaModule](
+  util,
   preprocessing,
   `neural-network`,
-  `gradient-descent`
+  `gradient-descent`,
+  training
 )
 
 /* * * * *

@@ -1,5 +1,6 @@
 package at.doml.thesis.nn
 
+import at.doml.thesis.util.Vec
 import scala.annotation.tailrec
 
 sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializable {

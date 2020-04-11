@@ -2,7 +2,8 @@ package at.doml.thesis.grad
 
 import at.doml.thesis.grad.GradientDescentOptimizer.{NeuronGradients, SampleWithLayerOutputs}
 import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, SingleLayer}
-import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron, Vec}
+import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
+import at.doml.thesis.util.Vec
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 
@@ -200,6 +201,8 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
       iter += 1
     }
   }
+
+  def result: NeuralNetwork[In, Out] = nn
 }
 
 object GradientDescentOptimizer {

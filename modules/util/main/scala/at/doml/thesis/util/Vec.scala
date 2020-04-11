@@ -1,4 +1,4 @@
-package at.doml.thesis.nn
+package at.doml.thesis.util
 
 import scala.collection.immutable.ArraySeq
 import scala.reflect.ClassTag
@@ -19,6 +19,7 @@ object Vec {
 
   def empty[A : ClassTag]: Vec[A, 0] = new Vec(ArraySeq.empty)
 
+  @deprecated
   def unsafeFromIterable[A : ClassTag, S <: Int](i: Iterable[A]): Vec[A, S] = new Vec(i.to(ArraySeq))
 
   def fill[A : ClassTag](n: Int)(elem: => A): Vec[A, n.type] = new Vec(ArraySeq.fill(n)(elem))
