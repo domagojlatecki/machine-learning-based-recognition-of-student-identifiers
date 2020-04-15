@@ -1,5 +1,6 @@
 package at.doml.thesis.nn
 
+import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
 import at.doml.thesis.util.Vec
 import scala.annotation.tailrec
 
@@ -8,11 +9,9 @@ sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializa
   final def out(in: Vec[Double, In]): Vec[Double, Out] = {
 
     @tailrec
-    def loop[I <: Int, O <: Int](nn: NeuralNetwork[I, O], v: Vec[Double, I]): Vec[Double, O] = {
-      nn match {
-        case NeuralNetwork.ForwardPass(first, rest) => loop(rest, first.out(v))
-        case NeuralNetwork.LastLayer(layer)         => layer.out(v)
-      }
+    def loop[I <: Int, O <: Int](nn: NeuralNetwork[I, O], v: Vec[Double, I]): Vec[Double, O] = nn match {
+      case ForwardPass(first, rest) => loop(rest, first.out(v))
+      case LastLayer(layer)         => layer.out(v)
     }
 
     loop(this, in)

@@ -7,6 +7,7 @@ import at.doml.thesis.util.Vec
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 
+@deprecated
 final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: NeuralNetwork[In, Out]) {
 
   private val NumLayers: Int = {
@@ -71,16 +72,16 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
       sampleOutputs.map { s =>
         val layerOutputs = s.reversedLayerOutputs.underlying
         val target = s.sample.target
-        val initialDelta = layerOutputs(0).mapWithIndex((y, i) => y * (1.0 - y) * (target(i) - y)).underlying
+        val initialDelta = layerOutputs(0).unsafeMapWithIndex((y, i) => y * (1.0 - y) * (target.underlying(i) - y)).underlying
 
         Vec.iterate((1, initialDelta), NumLayers) {
           case (layerIndex, previousDelta) =>
             val layerOut = layerOutputs(layerIndex)
-            val prevLayerNeurons = allNeurons(layerIndex - 1)
-            val deltas = layerOut.mapWithIndex { (y, i) =>
+            val prevLayerNeurons = allNeurons.underlying(layerIndex - 1)
+            val deltas = layerOut.unsafeMapWithIndex { (y, i) =>
               var sum = 0.0
-              for (j <- prevLayerNeurons.indices) {
-                sum += previousDelta(j) * prevLayerNeurons(j).w(i)
+              for (j <- prevLayerNeurons.indices.underlying) {
+                sum += previousDelta(j) * prevLayerNeurons.underlying(j).w.underlying(i)
               }
               y * (1.0 - y) * sum
             }.underlying
@@ -95,14 +96,14 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
       deltas: Vec[ReversedDeltas, N],
       allNeurons: ReversedNeurons
     ): ReversedGradients = {
-      allNeurons.mapWithIndex { (layerNeurons, layerIndex) =>
-        layerNeurons.mapWithIndex { (neuron, neuronIndex) =>
-          val wGrads = neuron.w.mapWithIndex { (_, wIndex) =>
+      allNeurons.unsafeMapWithIndex { (layerNeurons, layerIndex) =>
+        layerNeurons.unsafeMapWithIndex { (neuron, neuronIndex) =>
+          val wGrads = neuron.w.unsafeMapWithIndex { (_, wIndex) =>
             var sum = 0.0
 
             for (n <- sampleOutputs.indices) {
-              val y = sampleOutputs(n).getInputsForLayer(layerIndex)(wIndex)
-              val d = deltas(n)(layerIndex)(neuronIndex)
+              val y = sampleOutputs(n).getInputsForLayer(layerIndex).underlying(wIndex)
+              val d = deltas(n).underlying(layerIndex).underlying(neuronIndex)
               sum += d * y
             }
 
@@ -112,7 +113,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
           var w0Grad = 0.0
 
           for (n <- sampleOutputs.indices) {
-            w0Grad += deltas(n)(layerIndex)(neuronIndex)
+            w0Grad += deltas(n).underlying(layerIndex).underlying(neuronIndex)
           }
 
           NeuronGradients(wGrads.underlying, w0Grad)
@@ -121,13 +122,13 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
     }
 
     def applyGradients(gradients: ReversedGradients, allNeurons: ReversedNeurons): Unit = {
-      val adjustedLayers = gradients.mapWithIndex { (grads, layerIndex) =>
-        val neurons = allNeurons(layerIndex)
+      val adjustedLayers = gradients.unsafeMapWithIndex { (grads, layerIndex) =>
+        val neurons = allNeurons.underlying(layerIndex)
 
-        val adjustedNeurons = neurons.mapWithIndex { (neuron, neuronIndex) =>
-          val grad = grads(neuronIndex)
+        val adjustedNeurons = neurons.unsafeMapWithIndex { (neuron, neuronIndex) =>
+          val grad = grads.underlying(neuronIndex)
 
-          val w = neuron.w.mapWithIndex { (w, wIndex) => w + adjustedStep * grad.wGrads(wIndex) }
+          val w = neuron.w.unsafeMapWithIndex { (w, wIndex) => w + adjustedStep * grad.wGrads(wIndex) }
 
           val w0 = neuron.w0 + adjustedStep * grad.w0Grad
 
@@ -180,7 +181,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
         }
       }
 
-      sum / (2.0 + samples.length)
+      sum / (2.0 * samples.length)
     }
 
     var error = calcError(samples)
@@ -204,6 +205,7 @@ final class GradientDescentOptimizer[In <: Int, Out <: Int](private var nn: Neur
   def result: NeuralNetwork[In, Out] = nn
 }
 
+@deprecated
 object GradientDescentOptimizer {
 
   private final case class SampleWithLayerOutputs[In <: Int, Out <: Int, NumLayers <: Int](
@@ -215,7 +217,7 @@ object GradientDescentOptimizer {
       if (index + 1 == reversedLayerOutputs.length) {
         sample.input
       } else {
-        reversedLayerOutputs(index + 1)
+        reversedLayerOutputs.underlying(index + 1)
       }
     }
   }
