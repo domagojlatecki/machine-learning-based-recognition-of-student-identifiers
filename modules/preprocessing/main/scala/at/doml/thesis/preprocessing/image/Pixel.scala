@@ -1,4 +1,3 @@
-package at.doml.thesis
+package at.doml.thesis.preprocessing.image
 
-@deprecated
 final case class Pixel(color: Color, x: Int, y: Int)

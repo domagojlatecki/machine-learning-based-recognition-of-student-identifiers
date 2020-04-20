@@ -1,12 +1,23 @@
 package at.doml.thesis
 
 import java.nio.file.{Path, Paths}
-import scala.util.Random
+import scala.collection.immutable.ArraySeq
 
-// TODO refactor
+@deprecated
 object Preprocessor {
 
-  private final val FileNameRegex = "([0-9]{10})-(.+)".r
+  private val Colors = ArraySeq(
+    Color(255, 255, 0, 0),
+    Color(255, 0, 255, 0),
+    Color(255, 0, 0, 255),
+    Color(255, 255, 255, 0),
+    Color(255, 0, 255, 255),
+    Color(255, 255, 0, 255),
+    Color(255, 128, 64, 64),
+    Color(255, 64, 128, 64),
+    Color(255, 64, 64, 128),
+    Color(255, 128, 64, 128)
+  )
 
   private def grayscale(c: Color): Color = {
     val v = (Math.pow((c.r + c.g + c.b) / 768.0, 2.0) * 256.0).toInt
@@ -21,38 +32,14 @@ object Preprocessor {
 
     def debugWrite(stepName: String)(implicit dd: Option[DebugData]): Canvas = {
       dd.foreach { case DebugData(fileName, debugRoot) =>
-        println(s"[DEBUG] writing [$fileName] - $stepName (${c.entropy} black pixels)")
+        println(s"[DEBUG] writing [$fileName] - $stepName")
         c.writeTo(debugRoot.resolve(s"debug-$stepName").resolve(fileName))
       }
       c
     }
-
-    def entropy: Int = c.linear.count(_ == Color.Black)
   }
 
-  private def columnGroups(canvas: Canvas): List[(Int, Int)] = {
-    val colWidth = canvas.width / 10.0
-    lazy val cols: LazyList[Double] = 0 #:: colWidth #:: cols.zip(cols.tail).map { n => n._1 + colWidth }
-    val groups = cols.grouped(2)
-      .take(10)
-      .map(_.toList)
-      .map {
-        case List(a, b) => (a.toInt, b.toInt)
-      }.toList
-    val updated = groups.updated(9, (groups(9)._1, canvas.width)) // make sure that entire width is used
-    updated.sliding(2).map(_.flatMap { case (a, b) => List(a, b) } ).map(l => (l.min, l.max)).toList
-  }
-
-  def spacing(pixels: Seq[(Int, Int)]): Double = {
-    val distances = for {
-      p1 <- pixels
-      p2 <- pixels
-    } yield Math.sqrt(Math.pow(p1._1 - p2._1, 2.0) + Math.pow(p1._2 - p2._2, 2.0))
-
-    distances.sum / distances.length
-  }
-
-  def apply(path: Path, debugRoot: Option[Path] = None): List[LabeledData] = {
+  private def apply(path: Path, debugRoot: Option[Path] = None): List[LabeledData] = {
     implicit val debugData: Option[DebugData] = debugRoot.map(DebugData(path.getFileName, _))
 
     val grayscaled = Canvas.fromPath(path)
@@ -63,7 +50,7 @@ object Preprocessor {
     val maxIntensity = intensities.max
     val cutoffPoint = (maxIntensity - minIntensity) / 2.0
 
-    val contrasted = grayscaled.map { c =>
+    val contrasted = grayscaled .map { c =>
       if (c.a < 255) {
         Color.White
       } else if (intensity(c) > cutoffPoint) {
@@ -73,100 +60,189 @@ object Preprocessor {
       }
     }.debugWrite("contrast")
 
-    var pixelized = contrasted
-
-    while (pixelized.entropy > 500) {
-      pixelized = pixelized.mapGrouped(2, 2){ block =>
-        val sum = block.map {
-          case Color.Black => 1
-          case _           => 0
-        }.sum
-
-        if (sum > 1) Color.Black else Color.White
+    //
+    val trim = contrasted.pixels.groupBy(_.x).toList.sortBy(_._1).map { case (x, pixels) =>
+      pixels.map(_.color).reduce { (a, b) => (a, b) match {
+          case (Color.Black, _) => Color.Black
+          case (_, Color.Black) => Color.Black
+          case _                => Color.White
+        }
       }
     }
+    val left = trim.takeWhile(_ == Color.White).size
+    val right = trim.reverse.takeWhile(_ == Color.White).size
+    //
 
-    pixelized.debugWrite("pixelize")
+    val initCentroids = (0 until 10).map { i =>
+      (
+        left + (contrasted.width - left - right) / 10.0 * ((2 * i + 1) / 2.0),
+        contrasted.height / 2.0
+      )
+    }.toList
+    val blackPixels = contrasted.pixels.filter(_.color == Color.Black)
+    val centroids: List[(Double, Double)] = kMeans(initCentroids, blackPixels)
 
-    val FileNameRegex(digits, name) = path.getFileName.toString
-    val columns = columnGroups(pixelized)
-    val digitGroups = digits.toSeq
-      .sliding(2)
-      .zipWithIndex.map { case (d, i) => s"${"_" * i}$d${"_" * (8 - i)}"}
-      .toList
+    val grouped = contrasted.mapPixels { p =>
+      if (p.color == Color.White) {
+        Color.White
+      } else {
+        val coords = (p.x.toDouble, p.y.toDouble)
+        val distances = centroids.map(c => distance(c, coords)).zipWithIndex
+        val min = distances.minBy(_._1)
+        Colors(min._2)
+      }
+    }.debugWrite("grouped")
 
-    val groups = for ((column, digitGroup) <- columns zip digitGroups) yield {
-      pixelized.fromColumns(column._1, column._2)
-        .debugWrite("group")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
+    val data = for (i <- Colors.indices) yield {
+      val dd = debugData.map { parent =>
+        val name = parent.fileName.toString.replace(".png", s"-$i.png")
+        parent.copy(fileName = Paths.get(name))
+      }
+
+      val groupColor = Colors(i)
+      val groupPixels = grouped.pixels.filter(_.color == groupColor)
+      val xs = groupPixels.map(_.x)
+      val ys = groupPixels.map(_.y)
+      val xMin = xs.min
+      val xMax = xs.max
+      val yMin = ys.min
+      val yMax = ys.max
+      val width = xMax - xMin
+      val height = yMax - yMin
+      val map = groupPixels.map(p => (p.x - xMin, p.y - yMin) -> p.color).toMap
+
+      val c = Canvas.blank(width, height).mapPixels { p =>
+        map.getOrElse((p.x, p.y), p.color)
+      }
+
+      val initHotspotCentroids = List(
+        (width / 2.0, height / 2.0),
+        (width / 2.0, 0.0),
+        (width / 2.0, height.toDouble),
+        (0.0, height / 2.0),
+        (width.toDouble, height / 2.0)
+      )
+      val hotspotCentroids = kMeans(initHotspotCentroids, c.pixels.filter(_.color == groupColor))
+      val intHotspots = hotspotCentroids.map { case (a, b) => (a.toInt, b.toInt)}
+
+      c.mapPixels { p =>
+        if (intHotspots.contains((p.x, p.y))) {
+          Color(255, 255, 0, 0)
+        } else if (p.color == groupColor) {
+          Color.Black
+        } else {
+          Color.White
+        }
+      }.debugWrite("hotspots")(dd)
+
+      val cxmin = hotspotCentroids.map(_._1).min
+      val cymin = hotspotCentroids.map(_._2).min
+      val xDiff = width.toDouble
+      val yDiff = height.toDouble
+
+      LabeledData(
+        path.getFileName.toString.charAt(i).toString.toInt,
+        hotspotCentroids.map { case (x, y) =>
+          val nx = (x - cxmin) / xDiff
+          val ny = (y - cymin) / yDiff
+          (nx, ny)
+        }
+      )
     }
 
-    val randomized = for ((group, digitGroup) <- groups zip digitGroups) yield {
-      val blackPixels = group.pixels.filter(_.color == Color.Black)
+    data.toList
+  }
 
-      if (blackPixels.length < 20) {
-        println(s"[WARN] Image entropy too low: ${blackPixels.length}, skipping $digitGroup-$name")
-        None // TODO handle this better!
-      } else {
-        var bestSpacedPixels = blackPixels.take(20).map(p => (p.x, p.y))
-        var bestSpacing = spacing(bestSpacedPixels)
+  def distance(a: (Double, Double), b: (Double, Double)): Double = {
+    math.sqrt(math.pow(a._1 - b._1, 2.0) + math.pow(a._2 - b._2, 2.0))
+  }
 
-        for (_ <- 0 until 1000) {
-          val randomPixels = Random.shuffle(blackPixels).take(20).map(p => (p.x, p.y))
-          val randomSpacing = spacing(randomPixels)
+  private def kMeans(initCentroids: List[(Double, Double)], pixels: ArraySeq[Pixel]): List[(Double, Double)] = {
+    var centroids = initCentroids
+    var changed = true
 
-          if (randomSpacing > bestSpacing) {
-            bestSpacedPixels = randomPixels
-            bestSpacing = randomSpacing
-          }
+    while (changed) {
+      changed = false
+
+      val pixelsWithClosest = pixels.map { p =>
+        val coords = (p.x.toDouble, p.y.toDouble)
+        val distances = centroids.map(c => distance(c, coords)).zipWithIndex
+        val min = distances.minBy(_._1)
+        (p, min._2)
+      }
+
+      val nextCentroids = centroids.zipWithIndex.map { case (c, i) =>
+        val assignedPixels = pixelsWithClosest.filter(_._2 == i)
+        val len = assignedPixels.length
+
+        val (newX, newY) = if (len == 0) {
+          (
+            c._1, c._2
+          )
+        } else {
+          (
+            assignedPixels.map(_._1.x).sum.toDouble / len,
+            assignedPixels.map(_._1.y).sum.toDouble / len
+          )
         }
 
-        val evenlySpacedPixels = bestSpacedPixels.toSet
-        val out = group.mapPixels { p =>
-          if (evenlySpacedPixels.contains((p.x, p.y))) {
-            p.color
-          } else {
-            Color.White
-          }
-        }.debugWrite("randomized")(debugData.map(_.copy(fileName = Paths.get(s"$digitGroup-$name"))))
 
-        Some(out)
-      }
-    }
+        if ((newX - c._1) > 10e-7 || (newY - c._2) > 10e-7) {
+          changed = true
+        }
 
-    val imageData = for {
-      (groupOption, digitGroup) <- randomized zip digitGroups if groupOption.isDefined
-    } yield {
-      val group = groupOption.get
-
-      val twoDigitLabel = digitGroup.replaceAll("_", "")
-      val label = (twoDigitLabel(0).toString.toByte, twoDigitLabel(1).toString.toByte)
-      val blackPixels = group.pixels.filter(_.color == Color.Black)
-
-      val xMin = blackPixels.map(_.x).min
-      val xMax = blackPixels.map(_.x).max
-      val xDiff = (xMax - xMin).toDouble
-
-      val yMin = blackPixels.map(_.y).min
-      val yMax = blackPixels.map(_.y).max
-      val yDiff = (yMax - yMin).toDouble
-
-      val points = blackPixels.map { p =>
-        val x = (p.x - xMin) / xDiff
-        val y = (p.y - yMin) / yDiff
-        (x, y)
+        (newX, newY)
       }
 
-      LabeledData(label, points.toList)
+      centroids = nextCentroids
     }
 
-    imageData
+    centroids
+  }
+
+  private val ExcludedFiles: Set[String] = Set(
+    "0000000000-Pencil-2.png",
+    "0036478777-Black_Pen-2.png",
+    "0036478777-Green_Pen-2.png",
+    "0036478777-Pencil-2.png",
+    "0036478777-Red_Pen-2.png",
+    "1234567890-Black_Pen-1.png",
+    "7777777777-Black_Pen-2.png",
+    "0036478777-Green_Pen-1.png"
+  )
+
+  def loadDataset(): List[LabeledData] = {
+    Paths.get("data/input").toFile
+      .listFiles
+      .filter(f => !ExcludedFiles.contains(f.getName))
+      .flatMap { f =>
+        val data = apply(f.toPath)
+        val labels = data.map(_.label).mkString(" ")
+        println(s"[INFO] image [$f] preprocessed, labels: $labels")
+        data
+      }
+      .toList
+  }
+
+  def loadValidation(): Map[String, List[LabeledData]] = {
+    Paths.get("data/input").toFile
+      .listFiles
+      .filter(f => ExcludedFiles.contains(f.getName))
+      .map { f =>
+        val data = apply(f.toPath)
+        val labels = data.map(_.label).mkString(" ")
+        println(s"[INFO] image [$f] preprocessed, labels: $labels")
+        (f.getName, data)
+      }.toMap
   }
 
   def main(args: Array[String]): Unit = {
-    Paths.get("data/input").toFile.listFiles.foreach { f =>
-      apply(f.toPath, debugRoot = Some(Paths.get("data/"))) match {
-        case _ => println(s"[INFO] image [$f] preprocessed")
+    Paths.get("data/input").toFile.listFiles
+      .filter(f => !ExcludedFiles.contains(f.getName))
+      .foreach { f =>
+        val data = apply(f.toPath, debugRoot = Some(Paths.get("data/")))
+        val labels = data.map(_.label).mkString(" ")
+        println(s"[INFO] image [$f] preprocessed, labels: $labels")
       }
-    }
   }
 }

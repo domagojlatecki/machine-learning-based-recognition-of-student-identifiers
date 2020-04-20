@@ -6,6 +6,7 @@ import javax.imageio.ImageIO
 import scala.collection.immutable.ArraySeq
 
 // TODO refactor
+@deprecated
 final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
 
   val linear: ArraySeq[Color] = p
@@ -18,6 +19,7 @@ final class Canvas private (p: ArraySeq[Color], w: Int, h: Int) {
   }
   val area: Int = w * h
   val width: Int = w
+  val height: Int = h
 
   def writeTo(path: Path): Unit = {
     val out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
@@ -76,5 +78,9 @@ object Canvas {
     val pixels = image.getRGB(0, 0, width, height, null: Array[Int], 0, width).map(Color(_))
 
     new Canvas(ArraySeq.unsafeWrapArray(pixels), width, height)
+  }
+
+  def blank(width: Int, height: Int): Canvas = {
+    new Canvas(ArraySeq.fill(width * height)(Color.White), width, height)
   }
 }

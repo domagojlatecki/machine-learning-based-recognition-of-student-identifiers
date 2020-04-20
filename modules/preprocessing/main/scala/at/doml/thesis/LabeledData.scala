@@ -1,3 +1,4 @@
 package at.doml.thesis
 
-case class LabeledData(label: (Byte, Byte), points: List[(Double, Double)])
+@deprecated
+case class LabeledData(label: Int, points: List[(Double, Double)])
