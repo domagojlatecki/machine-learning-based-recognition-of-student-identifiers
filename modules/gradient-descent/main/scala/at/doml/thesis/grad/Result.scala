@@ -2,7 +2,7 @@ package at.doml.thesis.grad
 
 import at.doml.thesis.nn.NeuralNetwork
 
-sealed trait Result[In <: Int, Out <: Int] {
+sealed trait Result[In <: Int, Out <: Int] extends Product with Serializable {
   val nn: NeuralNetwork[In, Out]
 }
 

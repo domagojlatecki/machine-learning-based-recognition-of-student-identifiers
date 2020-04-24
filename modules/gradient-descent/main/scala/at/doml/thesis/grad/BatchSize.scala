@@ -1,6 +1,6 @@
 package at.doml.thesis.grad
 
-sealed trait BatchSize
+sealed trait BatchSize extends Product with Serializable
 
 object BatchSize {
 

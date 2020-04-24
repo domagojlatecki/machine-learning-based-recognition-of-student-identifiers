@@ -22,6 +22,9 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
   def minBy[B](f: A => B)(implicit cmp: Ordering[B]): A =
     underlying.minBy(f)
 
+  def maxBy[B](f: A => B)(implicit cmp: Ordering[B]): A =
+    underlying.maxBy(f)
+
   @deprecated
   def unsafeMapWithIndex[B : ClassTag](f: (A, Int) => B): Vec[B, S] =
     new Vec(ArraySeq.tabulate(length)(i => f(underlying(i), i)))
