@@ -324,7 +324,7 @@ object Main {
     }
 
     def trainNetwork(nn: NeuralNetwork[10, 10], samples: Vec[Sample[10, 10], Int]): Result[10, 10] = {
-      val par = new Parallel.NumProcessors()
+      val par = new NumProcessors()
       val result = GradientCalc.optimize(nn)(
         samples     = samples,
         step        = args.step,
@@ -391,7 +391,7 @@ object Main {
         val hotspots = d.hotspots.underlying.flatMap(p => ArraySeq(p.x, p.y))
         val label = d match {
           case Data.Labeled(_, l) => Some(l)
-          case Data.Raw(_)            => None
+          case Data.Raw(_)        => None
         }
 
         FlatData(

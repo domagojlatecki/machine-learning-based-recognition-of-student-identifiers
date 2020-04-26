@@ -94,7 +94,6 @@ object ArgumentParser {
         "Middle layers for neural network, exclusive with --load, default: 10x10",
         "int['x'int...]"
       )
-      // TODO load nn from path
     }
 
     final case class ArgsBuilder(
