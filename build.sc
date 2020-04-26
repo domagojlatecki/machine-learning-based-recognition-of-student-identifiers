@@ -12,7 +12,7 @@ import mill.contrib.scoverage.ScoverageModule
 
 private object Versions {
   // General
-  val Scala = "2.13.1"
+  val Scala = "2.13.2"
   val ScoverageVersion = "1.4.1"
   // Dependencies
   val ScalaTest = "3.1.1"

@@ -4,7 +4,7 @@ import at.doml.thesis.grad.NeuralNetworkData.{BackwardPassData, FirstLayerData}
 import at.doml.thesis.grad.Result.NoTrainingData
 import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
 import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.{Parallel, Vec}
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 
@@ -15,7 +15,7 @@ object GradientCalc {
   private def calcLayerOutputs[In <: Int, Out <: Int, N <: Int](
     sampleInputs: Vec[Vec[Double, In], N],
     nn:           NeuralNetwork[In, Out]
-  ): NeuralNetworkData[In, Out, N] = {
+  )(implicit par: Parallel): NeuralNetworkData[In, Out, N] = {
 
      @tailrec
      def loop[FI <: Int, I <: Int](
@@ -26,22 +26,22 @@ object GradientCalc {
        n match {
 
          case ForwardPass(first, rest) =>
-           val outs = ins.map(first.out)
+           val outs = ins.parMap(first.out)
            loop(rest, outs, BackwardPassData(LayerData(first.neurons, ins, outs), acc))
 
          case LastLayer(layer) =>
-           BackwardPassData(LayerData(layer.neurons, ins, ins.map(layer.out)), acc)
+           BackwardPassData(LayerData(layer.neurons, ins, ins.parMap(layer.out)), acc)
        }
 
 
      nn match {
 
        case ForwardPass(first, rest) =>
-         val outs = sampleInputs.map(first.out)
-         loop(rest, outs, FirstLayerData(LayerData(first.neurons, sampleInputs, sampleInputs.map(first.out))))
+         val outs = sampleInputs.parMap(first.out)
+         loop(rest, outs, FirstLayerData(LayerData(first.neurons, sampleInputs, sampleInputs.parMap(first.out))))
 
        case LastLayer(layer) =>
-         FirstLayerData(LayerData(layer.neurons, sampleInputs, sampleInputs.map(layer.out)))
+         FirstLayerData(LayerData(layer.neurons, sampleInputs, sampleInputs.parMap(layer.out)))
      }
    }
 
@@ -49,10 +49,10 @@ object GradientCalc {
     sampleTargets: Vec[Vec[Double, Out], N],
     nnd:           NeuralNetworkData[In, Out, N],
     step:          Double
-  ): NeuralNetwork[In, Out] = {
+  )(implicit par: Parallel): NeuralNetwork[In, Out] = {
 
     def calcLastLayerDeltas[I <: Int](layerData: LayerData[I, Out, N]): Vec[Vec[Double, Out], N] = {
-      layerData.sampleOutputs.mapWith(sampleTargets) { (outputs, targets) =>
+      layerData.sampleOutputs.parMapWith(sampleTargets) { (outputs, targets) =>
         outputs.mapWith(targets)((y, t) => y * (1.0 - y) * (t - y))
       }
     }
@@ -81,15 +81,21 @@ object GradientCalc {
     ): Vec[NeuronGrads[I], O] = {
       layerData.neurons.mapWithIndex { (neuron, o) =>
         val w = neuron.w.mapWithIndex { (_, i) =>
-          var sum = 0.0
+          val tasks = layerData.sampleInputs.indices.grouped(par.itemsPerThread).map { indices =>
+            () => {
+              var sum = 0.0
 
-          for (n <- layerData.sampleInputs.indices) {
-            val y = layerData.sampleInputs(n)(i)
-            val d = deltas(n)(o)
-            sum += d * y
+              for (n <- indices) {
+                val y = layerData.sampleInputs(n)(i)
+                val d = deltas(n)(o)
+                sum += d * y
+              }
+
+              sum
+            }
           }
 
-          sum
+          par.execute(tasks).sum
         }
 
         var w0 = 0.0
@@ -157,20 +163,26 @@ object GradientCalc {
     targets: Vec[Vec[Double, Out], N],
     inputs:  Vec[Vec[Double, In], N],
     nn:      NeuralNetwork[In, Out]
-  ): Double = {
+  )(implicit par: Parallel): Double = {
     val outputs = inputs.map(nn.out)
-    var sum = 0.0
+    val tasks = targets.indices.grouped(par.itemsPerThread).map { indices =>
+      () => {
+        var sum = 0.0
 
-    for (n <- targets.indices) {
-      val target = targets(n)
-      val output = outputs(n)
+        for (n <- indices) {
+          val target = targets(n)
+          val output = outputs(n)
 
-      for (o <- target.indices) {
-        sum += math.pow(target(o) - output(o), 2.0)
+          for (o <- target.indices) {
+            sum += math.pow(target(o) - output(o), 2.0)
+          }
+        }
+
+        sum
       }
     }
 
-    sum / (2.0 * targets.length)
+    par.execute(tasks).sum / (2.0 * targets.length)
   }
 
   def optimize[In <: Int, Out <: Int, N <: Int](
@@ -181,7 +193,7 @@ object GradientCalc {
     batchSize:   BatchSize,
     maxIters:    Int,
     targetError: Double
-  ): Result[In, Out] = {
+  )(implicit par: Parallel): Result[In, Out] = {
     val inputs = samples.map(_.input)
     val targets = samples.map(_.target)
 

@@ -324,13 +324,17 @@ object Main {
     }
 
     def trainNetwork(nn: NeuralNetwork[10, 10], samples: Vec[Sample[10, 10], Int]): Result[10, 10] = {
-      GradientCalc.optimize(nn)(
+      val par = new Parallel.NumProcessors()
+      val result = GradientCalc.optimize(nn)(
         samples     = samples,
         step        = args.step,
         batchSize   = args.batchSize,
         maxIters    = args.maxIters,
         targetError = args.targetError
-      )
+      )(par)
+
+      par.shutdown()
+      result
     }
 
     def writeResult(result: Result[10, 10]): ![Unit] = {
