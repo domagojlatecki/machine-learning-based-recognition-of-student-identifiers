@@ -1,25 +1,25 @@
 package at.doml.thesis.grad
 
-import at.doml.thesis.grad.NeuralNetworkData.{BackwardPassData, FirstLayerData}
 import at.doml.thesis.grad.Result.NoTrainingData
+import at.doml.thesis.grad.internal.{AccGrads, LayerData, LayerGrads, NeuralNetworkData, NeuronGrads}
+import at.doml.thesis.grad.internal.AccGrads.{ForwardPass, LastLayer}
+import at.doml.thesis.grad.internal.NeuralNetworkData.{BackwardPassData, FirstLayerData}
 import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
-import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
 import at.doml.thesis.util.{Parallel, Vec}
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 
+// TODO refactor
 object GradientCalc {
-
-  private final case class NeuronGrads[In <: Int](w: Vec[Double, In], w0: Double)
 
   private def calcLayerOutputs[In <: Int, Out <: Int, N <: Int](
     sampleInputs: Vec[Vec[Double, In], N],
-    nn:           NeuralNetwork[In, Out]
+    nn:           AccGrads[In, Out]
   )(implicit par: Parallel): NeuralNetworkData[In, Out, N] = {
 
      @tailrec
      def loop[FI <: Int, I <: Int](
-       n:   NeuralNetwork[I, Out],
+       n:   AccGrads[I, Out],
        ins: Vec[Vec[Double, I], N],
        acc: NeuralNetworkData[FI, I, N]
      ): NeuralNetworkData[FI, Out, N] =
@@ -27,10 +27,10 @@ object GradientCalc {
 
          case ForwardPass(first, rest) =>
            val outs = ins.parMap(first.out)
-           loop(rest, outs, BackwardPassData(LayerData(first.neurons, ins, outs), acc))
+           loop(rest, outs, BackwardPassData(LayerData(first.layer.neurons, ins, outs, first.accGrads), acc))
 
-         case LastLayer(layer) =>
-           BackwardPassData(LayerData(layer.neurons, ins, ins.parMap(layer.out)), acc)
+         case LastLayer(lg) =>
+           BackwardPassData(LayerData(lg.layer.neurons, ins, ins.parMap(lg.layer.out), lg.accGrads), acc)
        }
 
 
@@ -38,18 +38,21 @@ object GradientCalc {
 
        case ForwardPass(first, rest) =>
          val outs = sampleInputs.parMap(first.out)
-         loop(rest, outs, FirstLayerData(LayerData(first.neurons, sampleInputs, sampleInputs.parMap(first.out))))
+         val layerData = LayerData(first.layer.neurons, sampleInputs, sampleInputs.parMap(first.out), first.accGrads)
+         loop(rest, outs, FirstLayerData(layerData))
 
-       case LastLayer(layer) =>
-         FirstLayerData(LayerData(layer.neurons, sampleInputs, sampleInputs.parMap(layer.out)))
+       case LastLayer(lg) =>
+         FirstLayerData(LayerData(lg.layer.neurons, sampleInputs, sampleInputs.parMap(lg.layer.out), lg.accGrads))
      }
    }
 
   private def calcNextWeights[In <: Int, Out <: Int, N <: Int](
-    sampleTargets: Vec[Vec[Double, Out], N],
-    nnd:           NeuralNetworkData[In, Out, N],
-    step:          Double
-  )(implicit par: Parallel): NeuralNetwork[In, Out] = {
+    sampleTargets:    Vec[Vec[Double, Out], N],
+    nnd:              NeuralNetworkData[In, Out, N],
+    step:             Double,
+    gradCoeff:        Double,
+    gradDecay:        Double
+  )(implicit par: Parallel): AccGrads[In, Out] = {
 
     def calcLastLayerDeltas[I <: Int](layerData: LayerData[I, Out, N]): Vec[Vec[Double, Out], N] = {
       layerData.sampleOutputs.parMapWith(sampleTargets) { (outputs, targets) =>
@@ -111,14 +114,17 @@ object GradientCalc {
     def applyGradients[I <: Int, O <: Int, NO <: Int](
       layerData: LayerData[I, O, N],
       grads:     Vec[NeuronGrads[I], O]
-    ): Layer[I, O] = {
-      Layer(
-        layerData.neurons.mapWith(grads) { (neuron, grad) =>
-          Neuron(
-            neuron.w.mapWith(grad.w)((w, dw) => w + step * dw),
-            neuron.w0 + step * grad.w0
-          )
-        }
+    ): LayerGrads[I, O] = {
+      LayerGrads(
+        Layer(
+          layerData.neurons.mapWith(grads, layerData.accGrads) { (neuron, grad, accGrads) =>
+            Neuron(
+              neuron.w.mapWith(grad.w, accGrads.w)((w, dw, acc) => w + gradCoeff * step * dw + gradDecay * step * acc),
+              neuron.w0 + gradCoeff * step * grad.w0 + gradDecay * step * accGrads.w0
+            )
+          }
+        ),
+        grads
       )
     }
 
@@ -127,8 +133,8 @@ object GradientCalc {
       n:           NeuralNetworkData[In, O, N],
       prevNeurons: Vec[Neuron[O], NO],
       prevDeltas:  Vec[Vec[Double, NO], N],
-      acc:         NeuralNetwork[O, FO]
-    ): NeuralNetwork[In, FO] = n match {
+      acc:         AccGrads[O, FO]
+    ): AccGrads[In, FO] = n match {
 
       case BackwardPassData(layerData, previous) =>
         val deltas = calcLayerDeltas(layerData, prevNeurons, prevDeltas)
@@ -162,7 +168,7 @@ object GradientCalc {
   private def calcError[In <: Int, Out <: Int, N <: Int](
     targets: Vec[Vec[Double, Out], N],
     inputs:  Vec[Vec[Double, In], N],
-    nn:      NeuralNetwork[In, Out]
+    nn:      AccGrads[In, Out]
   )(implicit par: Parallel): Double = {
     val outputs = inputs.map(nn.out)
     val tasks = targets.indices.grouped(par.itemsPerThread).map { indices =>
@@ -190,6 +196,7 @@ object GradientCalc {
   )(
     samples:     Vec[Sample[In, Out], N],
     step:        Double,
+    inertia:     Double,
     batchSize:   BatchSize,
     maxIters:    Int,
     targetError: Double
@@ -209,13 +216,13 @@ object GradientCalc {
     val batches: List[Batch] = inputBatches.zip(targetBatches)
 
     @tailrec
-    def batchLoop(n: NeuralNetwork[In, Out], batch: Batch, rest: List[Batch]): NeuralNetwork[In, Out] = {
+    def batchLoop(n: AccGrads[In, Out], batch: Batch, rest: List[Batch]): AccGrads[In, Out] = {
       val len = batch._1.length
       val input: Vec[Vec[Double, In], len.type] = Vec.unsafeWrap(batch._1)
       val target: Vec[Vec[Double, Out], len.type] = Vec.unsafeWrap(batch._2)
       val adjustedStep = step / len
       val nnd = calcLayerOutputs(input, n)
-      val next = calcNextWeights(target, nnd, adjustedStep)
+      val next = calcNextWeights(target, nnd, adjustedStep, 1.0 - inertia, inertia)
 
       rest match {
         case Nil    => next
@@ -224,28 +231,30 @@ object GradientCalc {
     }
 
     @tailrec
-    def loop(n: NeuralNetwork[In, Out], iter: Int, err: Double): Result[In, Out] = {
+    def loop(n: AccGrads[In, Out], iter: Int, err: Double): Result[In, Out] = {
       if (err <= targetError) {
-        Result.TargetError(n)
+        Result.TargetError(AccGrads.unwrap(n))
       } else if (iter > maxIters) {
-        Result.MaxIterations(n)
+        Result.MaxIterations(AccGrads.unwrap(n))
       } else {
         batches match {
-          case Nil    => NoTrainingData(n)
+          case Nil    => NoTrainingData(AccGrads.unwrap(n))
           case h :: t =>
             val next = batchLoop(n, h, t)
             val error = calcError(targets, inputs, next)
+            val color = if (err > error) "\u001B[32m" else if (err < error) "\u001B[31m" else "\u001B[33m"
 
-            println(s"Iteration $iter error: $error")
+            println(s"${color}Iteration $iter error: $error\u001B[0m")
 
             loop(next, iter + 1, error)
         }
       }
     }
 
-    val error = calcError(targets, inputs, nn)
+    val acc = AccGrads.wrap(nn)
+    val error = calcError(targets, inputs, acc)
     println(s"Initial error: $error")
 
-    loop(nn, 1, error)
+    loop(acc, 1, error)
   }
 }

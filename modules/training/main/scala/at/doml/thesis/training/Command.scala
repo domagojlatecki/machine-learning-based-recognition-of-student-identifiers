@@ -25,6 +25,7 @@ object Command {
     outputFile:            Path,
     neuralNetworkProvider: NeuralNetworkProvider,
     step:                  Double,
+    inertia:               Double,
     batchSize:             BatchSize,
     maxIters:              Int,
     targetError:           Double

@@ -1,4 +1,4 @@
-package at.doml.thesis.grad
+package at.doml.thesis.grad.internal
 
 private[grad] sealed trait NeuralNetworkData[In <: Int, Out <: Int, N <: Int] extends Product with Serializable
 

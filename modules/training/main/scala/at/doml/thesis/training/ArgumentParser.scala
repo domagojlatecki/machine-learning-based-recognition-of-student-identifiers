@@ -81,6 +81,7 @@ object ArgumentParser {
     object State {
       case object Init            extends State
       case object Step            extends Arg("--step", "Learning step, default value: 1.0", "double")
+      case object Inertia         extends Arg("--inertia", "Gradient inertia, default value: 0.0", "double")
       case object BatchSize       extends Arg("--batch-size", "Batch size, default value: 'all'", "double | 'all'")
       case object MaxIters        extends Arg("--max-iters", "Max number of iterations, default value: 10000", "int")
       case object TargetError     extends Arg("--target-error", "Target error, default value: 10e-7", "double")
@@ -102,6 +103,7 @@ object ArgumentParser {
       neuralNetworkProvider: NeuralNetworkProvider = CreateFromLayout(List(10 ,10)),
       numbersPerImage:       Int                   = 10,
       step:                  Double                = 1.0,
+      inertia:               Double                = 0.0,
       batchSize:             BatchSize             = BatchSize.all,
       maxIters:              Int                   = 10_000,
       targetError:           Double                = 10e-7
@@ -115,6 +117,7 @@ object ArgumentParser {
 
     val namedStates: List[Arg] = List(
       State.Step,
+      State.Inertia,
       State.BatchSize,
       State.MaxIters,
       State.TargetError,
@@ -143,6 +146,13 @@ object ArgumentParser {
           arg.toDoubleOption match {
             case Some(v) => Right((State.Init, acc.copy(step = v)))
             case None    => Left(NumberParseError(arg))
+          }
+
+        case State.Inertia =>
+          arg.toDoubleOption match {
+            case Some(v) if v >= 0.0 && v <= 1.0 => Right((State.Init, acc.copy(step = v)))
+            case Some(v)                         => Left(IllegalArgumentError(arg))
+            case None                            => Left(NumberParseError(arg))
           }
 
         case State.BatchSize =>
@@ -244,6 +254,7 @@ object ArgumentParser {
               outputFile = outputFile,
               neuralNetworkProvider = acc.neuralNetworkProvider,
               step = acc.step,
+              inertia = acc.inertia,
               batchSize = acc.batchSize,
               maxIters = acc.maxIters,
               targetError = acc.targetError

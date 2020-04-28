@@ -31,6 +31,9 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
   def mapWith[B, C : ClassTag](that: Vec[B, S])(f: (A, B) => C): Vec[C, S] =
     new Vec(ArraySeq.tabulate(length)(i => f(underlying(i), that.underlying(i))))
 
+  def mapWith[B, C, D : ClassTag](that1: Vec[B, S], that2: Vec[C, S])(f: (A, B, C) => D): Vec[D, S] =
+    new Vec(ArraySeq.tabulate(length)(i => f(underlying(i), that1.underlying(i), that2.underlying(i))))
+
   def parMapWith[B, C : ClassTag](that: Vec[B, S])(f: (A, B) => C)(implicit par: Parallel): Vec[C, S] = {
     val out = new Array[C](length)
     val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices =>
@@ -61,6 +64,8 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
 }
 
 object Vec {
+
+  def empty[A : ClassTag]: Vec[A, 0] = new Vec(ArraySeq.empty)
 
   def unsafeWrap[A, S <: Int](a: ArraySeq[A]): Vec[A, S] = new Vec(a)
 

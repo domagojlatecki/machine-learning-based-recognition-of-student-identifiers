@@ -3,7 +3,7 @@ package at.doml.thesis.training
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import at.doml.thesis.grad.{GradientCalc, Result, Sample}
+import at.doml.thesis.grad.{BatchSize, GradientCalc, Result, Sample}
 import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
 import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
 import at.doml.thesis.preprocessing.{Data, Preprocessor}
@@ -324,10 +324,20 @@ object Main {
     }
 
     def trainNetwork(nn: NeuralNetwork[10, 10], samples: Vec[Sample[10, 10], Int]): Result[10, 10] = {
-      val par = new NumProcessors()
+      val batchSize = args.batchSize match {
+        case BatchSize.of(v) => v
+        case BatchSize.all   => samples.length
+      }
+      val par =
+        if (batchSize <= Parallel.DefaultItemsPerThread || samples.length <= Parallel.DefaultItemsPerThread) {
+          Parallel.SingleThread
+        } else {
+          new Parallel.NumProcessors()
+        }
       val result = GradientCalc.optimize(nn)(
         samples     = samples,
         step        = args.step,
+        inertia     = args.inertia,
         batchSize   = args.batchSize,
         maxIters    = args.maxIters,
         targetError = args.targetError
