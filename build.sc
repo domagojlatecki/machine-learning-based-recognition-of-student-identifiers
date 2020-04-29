@@ -23,14 +23,40 @@ private object Settings {
 
   private def prefix(p: String)(args: String*) = args.map(p + _)
 
-  val ScalacOptions = Seq(
+  def scalacOptions(optimize: Boolean) = Seq(
     Seq(
       "-deprecation",
       "-encoding", "utf-8",
       "-explaintypes",
       "-feature",
-      "-unchecked"
+      "-unchecked",
+      "-target:jvm-1.8"
     ),
+
+    if (optimize) {
+      Seq(
+        prefix("-opt:")(
+          "unreachable-code",
+          "simplify-jumps",
+          "compact-locals",
+          "copy-propagation",
+          "redundant-casts",
+          "box-unbox",
+          "nullness-tracking",
+          "closure-invocations",
+          "allow-skip-core-module-init",
+          "assume-modules-non-null",
+          "allow-skip-class-loading",
+          "inline",
+          "l:method",
+          "l:inline"
+        ),
+        Seq(
+          "-opt-inline-from:at.doml.thesis.**",
+          "-g:none"
+        )
+      ).flatten
+    } else Seq.empty,
 
     prefix("-W")(
       //"error",
@@ -112,9 +138,9 @@ private implicit class SeqTaskOps[A](seq: Seq[A]) {
 
 trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
 
-  override def scalaVersion = Versions.Scala
-  override def scoverageVersion = Versions.ScoverageVersion
-  override def scalacOptions = Settings.ScalacOptions
+  override def scalaVersion = T { Versions.Scala }
+  override def scoverageVersion = T { Versions.ScoverageVersion }
+  override def scalacOptions = T { Settings.scalacOptions(optimize = T.ctx.env.contains("OPT_BUILD")) }
   override def millSourcePath = {
     val segments = super.millSourcePath.segments.toList
     os.root / (segments.init :+ "modules" :+ segments.last)
@@ -173,6 +199,8 @@ object `gradient-descent` extends ScalaModule {
 
 object training extends ScalaModule {
   override def moduleDeps = Seq(preprocessing, `gradient-descent`)
+  override def mainClass = T { Some("at.doml.thesis.training.Main") }
+  override def ivyDeps = Agg(ivy"com.oracle.substratevm:svm:19.1.0")
 }
 
 private val allModules = Seq[ScalaModule](

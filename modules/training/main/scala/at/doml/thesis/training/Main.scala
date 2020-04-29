@@ -312,14 +312,14 @@ object Main {
 
     def convertToSamples(data: Vec[Data, Int]): Vec[Sample[10, 10], Int] = {
       data.map { case Data.Labeled(hotspots, label) =>
-          val input = hotspots.underlying.flatMap(p => ArraySeq(p.x, p.y))
-          val target = new Array[Double](10)
-          target(label) = 1.0
+        val input = hotspots.underlying.flatMap(p => ArraySeq(p.x, p.y))
+        val target = new Array[Double](10)
+        target(label) = 1.0
 
-          Sample(
-            Vec.unsafeWrap(input),
-            Vec.unsafeWrap(ArraySeq.unsafeWrapArray((target)))
-          )
+        Sample(
+          Vec.unsafeWrap(input),
+          Vec.unsafeWrap(ArraySeq.unsafeWrapArray((target)))
+        )
       }
     }
 
@@ -411,28 +411,52 @@ object Main {
       }
     }
 
-    def printAccuracy(nn: NeuralNetwork[10, 10], data: Vec[FlatData, Int]): Unit = {
-      var correct = 0
-      var total = 0
+    def loadNeuralNetworks(paths: List[Path]): ![List[NeuralNetwork[10, 10]]] = {
+      val init: ![List[NeuralNetwork[10, 10]]] = Right(Nil)
 
-      data.underlying.foreach { d =>
-        val out = nn.out(d.hotspots).mapWithIndex((v, i) => (v, i)).maxBy(_._1)._2.v
+      paths.foldLeft(init) { (err, path) =>
+        err.flatMap(loaded => loadNeuralNetwork(path).map(_ :: loaded))
+      }
+    }
 
-        d.label match {
+    def printAccuracy(nns: List[NeuralNetwork[10, 10]], data: Vec[FlatData, Int]): Unit = {
+      val allOuts = nns.map(nn => data.map(d => (nn.out(d.hotspots), d.label)))
 
-          case Some(label) =>
-            total += 1
-
-            if (out == label) {
-              correct += 1
-            }
-
-          case None =>
-            println(s"Data without label, guess: $out")
+      val outs = if (args.ensemble) {
+        val combined = allOuts.reduce { (data1, data2) =>
+          data1.mapWith(data2) { (outs1, outs2) =>
+            (outs1._1.mapWith(outs2._1)(_ + _), outs1._2)
+          }
         }
+
+        List(combined)
+      } else {
+        allOuts
       }
 
-      println(f"Test accuracy: ${100.0 * correct / total}%.2f%%")
+      for (out <- outs) {
+        var correct = 0
+        var total = 0
+
+        out.underlying.foreach { o =>
+          val prediction = o._1.mapWithIndex((v, i) => (v, i)).maxBy(_._1)._2.v
+
+          o._2 match {
+
+            case Some(label) =>
+              total += 1
+
+              if (prediction == label) {
+                correct += 1
+              }
+
+            case None =>
+              println(s"Data without label, guess: $out")
+          }
+        }
+
+        println(f"Test accuracy: ${100.0 * correct / total}%.2f%%")
+      }
     }
 
     for {
@@ -440,9 +464,9 @@ object Main {
                     case RawSamples(path, n)       => loadRawSamples(path, n, requireLabels = false)
                     case PreprocessedSamples(path) => loadPreprocessedSamples(path, requireLabels = false)
                   }
-      nn       <- loadNeuralNetwork(args.neuralNetworkPath)
+      nns      <- loadNeuralNetworks(args.neuralNetworkPaths)
       flatData  = flattenData(data)
-    } yield printAccuracy(nn, flatData)
+    } yield printAccuracy(nns, flatData)
   }
 
   private def prepare(args: Command.Prepare): ![Unit] = {

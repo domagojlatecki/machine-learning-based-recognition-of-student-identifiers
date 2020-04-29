@@ -24,6 +24,7 @@ object ArgumentParser {
     val commandName: String
     val namedStates: List[NS]
     val initState: S
+    val endStates: Set[S]
     val emptyAcc: Acc
 
     def applyState(arg: String, state: S, acc: Acc): ![(S, Acc)]
@@ -36,7 +37,7 @@ object ArgumentParser {
       def loop(args: List[String], state: S, acc: Acc): ![Command] = args match {
 
         case Nil =>
-          if (state == initState) {
+          if (endStates.contains(state)) {
             buildArgs(acc)
           } else {
             Left(MissingArgumentError(state.toString))
@@ -130,6 +131,8 @@ object ArgumentParser {
     )
 
     val initState: State = State.Init
+
+    val endStates: Set[State] = Set(initState)
 
     val emptyAcc: ArgsBuilder = ArgsBuilder()
 
@@ -286,13 +289,23 @@ object ArgumentParser {
       case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --hotspots", "dir")
       case object PrepSamples     extends Arg("--hotspots", "Root of hotspots dataset, exclusive with --images", "dir")
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
-      case object NetworkPath     extends Arg("--nn-path", "Path to neural network file", "file")
+      case object NetworkPaths    extends Arg(
+        "--nn-paths",
+        "Path to neural network files, must be the last argument",
+        "file [file...]"
+      )
+      case object Ensemble        extends Arg(
+        "--ensemble",
+        "Ensemble neural networks into a single classifier, disabled by default",
+        ""
+      )
     }
 
     final case class ArgsBuilder(
-      samplesPath:       Option[SamplesPath] = None,
-      neuralNetworkPath: Option[Path]        = None,
-      numbersPerImage:   Int                 = 10
+      samplesPath:        Option[SamplesPath] = None,
+      neuralNetworkPaths: List[Path]          = Nil,
+      numbersPerImage:    Int                 = 10,
+      ensemble:           Boolean             = false
     )
 
     type S = State
@@ -305,10 +318,13 @@ object ArgumentParser {
       State.RawSamples,
       State.PrepSamples,
       State.NumbersPerImage,
-      State.NetworkPath
+      State.Ensemble,
+      State.NetworkPaths
     )
 
     val initState: State = State.Init
+
+    val endStates: Set[State] = Set(initState, State.NetworkPaths)
 
     val emptyAcc: ArgsBuilder = ArgsBuilder()
 
@@ -317,8 +333,9 @@ object ArgumentParser {
 
         case State.Init =>
           namedStates.find(_.name == arg) match {
-            case Some(nextState) => Right((nextState, acc))
-            case None            => Left(UnknownArgumentError(arg))
+            case Some(State.Ensemble) => Right((State.Init, acc.copy(ensemble = true)))
+            case Some(nextState)      => Right((nextState, acc))
+            case None                 => Left(UnknownArgumentError(arg))
           }
 
         case State.RawSamples =>
@@ -346,11 +363,11 @@ object ArgumentParser {
             case None             => Left(NumberParseError(arg))
           }
 
-        case State.NetworkPath =>
+        case State.NetworkPaths =>
           val path = Paths.get(arg)
 
           if (path.toFile.isFile) {
-            Right((State.Init, acc.copy(neuralNetworkPath = Some(path))))
+            Right((State.NetworkPaths, acc.copy(neuralNetworkPaths = path :: acc.neuralNetworkPaths)))
           } else {
             Left(IllegalArgumentError(arg))
           }
@@ -359,8 +376,8 @@ object ArgumentParser {
 
     def buildArgs(acc: ArgsBuilder): ![Command.Test] = {
 
-      (acc.samplesPath, acc.neuralNetworkPath) match {
-        case (Some(samplesPath), Some(neuralNetworkPath)) =>
+      (acc.samplesPath, acc.neuralNetworkPaths) match {
+        case (Some(samplesPath), first :: rest) =>
           val sp = samplesPath match {
             case RawSamples(p, _) => RawSamples(p, acc.numbersPerImage)
             case v                => v
@@ -369,18 +386,19 @@ object ArgumentParser {
           Right(
             Command.Test(
               samplesPath = sp,
-              neuralNetworkPath = neuralNetworkPath
+              neuralNetworkPaths = first :: rest,
+              ensemble = acc.ensemble
             )
           )
 
-        case (Some(_), None) =>
-          Left(MissingArgumentError("--nn-path"))
+        case (Some(_), Nil) =>
+          Left(MissingArgumentError("--nn-paths"))
 
-        case (None, Some(_)) =>
+        case (None, _ :: _) =>
           Left(MissingArgumentError("--images or --hotspots"))
 
-        case (None, None) =>
-          Left(MissingArgumentError("--images or --hotspots, --nn-path"))
+        case (None, Nil) =>
+          Left(MissingArgumentError("--images or --hotspots, --nn-paths"))
       }
     }
   }
@@ -419,6 +437,8 @@ object ArgumentParser {
     )
 
     val initState: State = State.Init
+
+    val endStates: Set[State] = Set(initState)
 
     val emptyAcc: ArgsBuilder = ArgsBuilder()
 

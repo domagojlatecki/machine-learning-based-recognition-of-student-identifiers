@@ -32,8 +32,9 @@ object Command {
   ) extends Command
 
   final case class Test(
-    samplesPath:       SamplesPath,
-    neuralNetworkPath: Path
+    samplesPath:        SamplesPath,
+    neuralNetworkPaths: List[Path],
+    ensemble:           Boolean
   ) extends Command
 
   final case class Prepare(
