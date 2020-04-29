@@ -32,22 +32,23 @@ object Preprocessor {
     }
 
   def process(
-    canvas: Canvas,
-    n:      Int
+    canvas:     Canvas,
+    canvasName: String,
+    n:          Int
   )(
     labels:   Option[Vec[Int, n.type]] = None,
     debugger: CanvasDebugger           = CanvasDebugger.NoOp
   ): Vec[Data, n.type] = {
     implicit val debug: CanvasDebugger = debugger
 
-    val grayscale = GrayscaleTransform(canvas)
-    val contrast = ContrastTransform(grayscale)
+    val grayscale = GrayscaleTransform(canvas, canvasName)
+    val contrast = ContrastTransform(grayscale, canvasName)
     val (left, right) = findLeftAndRightEdges(contrast)
     val initCentroids = createCentroids(n, left, right, contrast.width, contrast.height)
     val blackPixels = contrast.getAllPointsWithColor(Color.Black)
     val centroids = KMeansGrouping.findCentroids(initCentroids, blackPixels)
-    val groups = GroupingTransform(contrast, n)(centroids)
-    val hotspots = groups.mapWithIndex { (group, i) => HotspotsTransform(group, i.v)}
+    val groups = GroupingTransform(contrast, canvasName, n)(centroids)
+    val hotspots = groups.mapWithIndex { (group, i) => HotspotsTransform(group, s"$canvasName-${i.v}")}
 
     labels match {
       case None     => hotspots.map(Data.Raw)

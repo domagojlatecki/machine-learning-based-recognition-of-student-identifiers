@@ -115,6 +115,7 @@ object GradientCalc {
       layerData: LayerData[I, O, N],
       grads:     Vec[NeuronGrads[I], O]
     ): LayerGrads[I, O] = {
+      // TODO use all grad history
       LayerGrads(
         Layer(
           layerData.neurons.mapWith(grads, layerData.accGrads) { (neuron, grad, accGrads) =>
@@ -251,7 +252,7 @@ object GradientCalc {
       }
     }
 
-    val acc = AccGrads.wrap(nn)
+    val acc = AccGrads.wrap(nn) // TODO initialize to iteration 1 gradients
     val error = calcError(targets, inputs, acc)
     println(s"Initial error: $error")
 

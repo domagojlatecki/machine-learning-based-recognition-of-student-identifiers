@@ -1,15 +1,23 @@
 package at.doml.thesis.training
 
 import java.awt.image.BufferedImage
-import java.nio.file.Path
+import java.nio.file.{Path, Paths}
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.image.Canvas
 import javax.imageio.ImageIO
 
-object FileCanvasDebugger extends CanvasDebugger {
+final class FileCanvasDebugger(debugRoot: Path) extends CanvasDebugger {
 
-  def apply(canvas: => Canvas, debugStepName: String, canvasIndex: Int): Unit = {
-    // TODO implement debugger
+  def apply(canvas: => Canvas, debugStepName: String, canvasName: String): Unit = {
+    val debugDir = debugRoot.resolve(s"debug-$debugStepName")
+
+    if (debugDir.toFile.mkdir()) {
+      println(s"[DEBUG] Creating debug directory: $debugDir")
+    }
+
+    val outPath = debugDir.resolve(s"$canvasName.png")
+
+    writeCanvas(canvas, outPath)
   }
 
   private def writeCanvas(canvas: Canvas, path: Path): Unit = {

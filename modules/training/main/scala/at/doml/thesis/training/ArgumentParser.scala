@@ -91,6 +91,7 @@ object ArgumentParser {
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
       case object OutputPath      extends Arg("--output", "Output file for neural network", "file")
       case object LoadNetwork     extends Arg("--load", "Load neural network file, exclusive with --layout", "file")
+      case object DebugRoot       extends Arg("--debug", "Image debug data root, optional", "dir")
       case object Layout          extends Arg(
         "--layout",
         "Middle layers for neural network, exclusive with --load, default: 10x10",
@@ -100,6 +101,7 @@ object ArgumentParser {
 
     final case class ArgsBuilder(
       samplesPath:           Option[SamplesPath]   = None,
+      debugRoot:             Option[Path]          = None,
       outputFile:            Option[Path]          = None,
       neuralNetworkProvider: NeuralNetworkProvider = CreateFromLayout(List(10 ,10)),
       numbersPerImage:       Int                   = 10,
@@ -127,6 +129,7 @@ object ArgumentParser {
       State.NumbersPerImage,
       State.OutputPath,
       State.LoadNetwork,
+      State.DebugRoot,
       State.Layout
     )
 
@@ -153,8 +156,8 @@ object ArgumentParser {
 
         case State.Inertia =>
           arg.toDoubleOption match {
-            case Some(v) if v >= 0.0 && v <= 1.0 => Right((State.Init, acc.copy(step = v)))
-            case Some(v)                         => Left(IllegalArgumentError(arg))
+            case Some(v) if v >= 0.0 && v <= 1.0 => Right((State.Init, acc.copy(inertia = v)))
+            case Some(_)                         => Left(IllegalArgumentError(arg))
             case None                            => Left(NumberParseError(arg))
           }
 
@@ -225,6 +228,15 @@ object ArgumentParser {
             Left(IllegalArgumentError(arg))
           }
 
+        case State.DebugRoot =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isFile) {
+            Left(IllegalArgumentError(arg))
+          } else {
+            Right((State.Init, acc.copy(debugRoot = Some(path))))
+          }
+
         case State.Layout =>
           val init: Option[List[Int]] = Some(Nil)
           val result = arg.split('x').map(_.toIntOption).foldLeft(init) { (list, int) =>
@@ -254,6 +266,7 @@ object ArgumentParser {
           Right(
             Command.Train(
               samplesPath = sp,
+              debugRoot = acc.debugRoot,
               outputFile = outputFile,
               neuralNetworkProvider = acc.neuralNetworkProvider,
               step = acc.step,
@@ -289,6 +302,7 @@ object ArgumentParser {
       case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --hotspots", "dir")
       case object PrepSamples     extends Arg("--hotspots", "Root of hotspots dataset, exclusive with --images", "dir")
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
+      case object DebugRoot       extends Arg("--debug", "Image debug data root, optional", "dir")
       case object NetworkPaths    extends Arg(
         "--nn-paths",
         "Path to neural network files, must be the last argument",
@@ -303,6 +317,7 @@ object ArgumentParser {
 
     final case class ArgsBuilder(
       samplesPath:        Option[SamplesPath] = None,
+      debugRoot:          Option[Path]        = None,
       neuralNetworkPaths: List[Path]          = Nil,
       numbersPerImage:    Int                 = 10,
       ensemble:           Boolean             = false
@@ -319,6 +334,7 @@ object ArgumentParser {
       State.PrepSamples,
       State.NumbersPerImage,
       State.Ensemble,
+      State.DebugRoot,
       State.NetworkPaths
     )
 
@@ -363,6 +379,15 @@ object ArgumentParser {
             case None             => Left(NumberParseError(arg))
           }
 
+        case State.DebugRoot =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isFile) {
+            Left(IllegalArgumentError(arg))
+          } else {
+            Right((State.Init, acc.copy(debugRoot = Some(path))))
+          }
+
         case State.NetworkPaths =>
           val path = Paths.get(arg)
 
@@ -386,6 +411,7 @@ object ArgumentParser {
           Right(
             Command.Test(
               samplesPath = sp,
+              debugRoot = acc.debugRoot,
               neuralNetworkPaths = first :: rest,
               ensemble = acc.ensemble
             )
@@ -416,10 +442,12 @@ object ArgumentParser {
       case object InputPath       extends Arg("--images", "Root of image dataset", "dir")
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
       case object OutputPath      extends Arg("--output", "Processed images output file", "file")
+      case object DebugRoot       extends Arg("--debug", "Image debug data root, optional", "dir")
     }
 
     final case class ArgsBuilder(
       imagesPath:      Option[Path] = None,
+      debugRoot:       Option[Path] = None,
       outputFile:      Option[Path] = None,
       numbersPerImage: Int          = 10
     )
@@ -433,7 +461,8 @@ object ArgumentParser {
     val namedStates: List[Arg] = List(
       State.InputPath,
       State.NumbersPerImage,
-      State.OutputPath
+      State.OutputPath,
+      State.DebugRoot
     )
 
     val initState: State = State.Init
@@ -475,6 +504,15 @@ object ArgumentParser {
           } else {
             Left(IllegalArgumentError(arg))
           }
+
+        case State.DebugRoot =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isFile) {
+            Left(IllegalArgumentError(arg))
+          } else {
+            Right((State.Init, acc.copy(debugRoot = Some(path))))
+          }
       }
     }
 
@@ -485,6 +523,7 @@ object ArgumentParser {
           Right(
             Command.Prepare(
               imagesPath = imagesPath,
+              debugRoot = acc.debugRoot,
               numbersPerImage = acc.numbersPerImage,
               outputFile = outputFile
             )

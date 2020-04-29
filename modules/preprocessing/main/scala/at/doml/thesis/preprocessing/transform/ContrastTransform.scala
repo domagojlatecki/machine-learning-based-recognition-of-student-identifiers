@@ -7,7 +7,7 @@ object ContrastTransform {
 
   private def intensity(c: Color): Int = c.red + c.green + c.blue
 
-  def apply(canvas: Canvas)(implicit debugger: CanvasDebugger): Canvas = {
+  def apply(canvas: Canvas, canvasName: String)(implicit debugger: CanvasDebugger): Canvas = {
     val intensities = canvas.values.filter(_.alpha == 255).map(intensity)
     val minIntensity = intensities.min
     val maxIntensity = intensities.max
@@ -23,7 +23,7 @@ object ContrastTransform {
       }
     }
 
-    debugger(result, "contrast", 0)
+    debugger(result, "contrast", canvasName)
     result
   }
 }

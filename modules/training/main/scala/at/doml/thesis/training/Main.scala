@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path}
 import at.doml.thesis.grad.{BatchSize, GradientCalc, Result, Sample}
 import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
 import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
+import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.{Data, Preprocessor}
 import at.doml.thesis.preprocessing.image.{Canvas, Color, Point}
 import at.doml.thesis.training.Command.{CreateFromLayout, LoadFromFile, PreprocessedSamples, RawSamples}
@@ -88,7 +89,12 @@ object Main {
   }
 
   // TODO add debug data
-  private def loadRawSamples(path: Path, n: Int, requireLabels: Boolean): ![Vec[Data, Int]] = {
+  private def loadRawSamples(
+    path:          Path,
+    n:             Int,
+    requireLabels: Boolean,
+    debugger:      CanvasDebugger
+  ): ![Vec[Data, Int]] = {
 
     def extractLabels(f: File): Option[Vec[Int, n.type]] = {
       val extractedLabels = f.getName match {
@@ -106,7 +112,7 @@ object Main {
         if (labels.isEmpty && requireLabels) {
           Left(InvalidFileLabelsError(f.getName))
         } else {
-          Right(Preprocessor.process(canvas, valueOf[n.type])(labels))
+          Right(Preprocessor.process(canvas, f.getName.replaceAll("\\.png$", ""), valueOf[n.type])(labels, debugger))
         }
       }
     }
@@ -378,10 +384,15 @@ object Main {
       }
     }
 
+    val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
     for {
       data    <- args.samplesPath match {
-                   case RawSamples(path, numbersPerImage) => loadRawSamples(path, numbersPerImage, requireLabels = true)
-                   case PreprocessedSamples(path)         => loadPreprocessedSamples(path, requireLabels = true)
+
+                   case RawSamples(path, numbersPerImage) =>
+                     loadRawSamples(path, numbersPerImage, requireLabels = true, debugger)
+
+                   case PreprocessedSamples(path)         =>
+                     loadPreprocessedSamples(path, requireLabels = true)
                  }
       nn      <- args.neuralNetworkProvider match {
                    case LoadFromFile(path)       => loadNeuralNetwork(path)
@@ -459,9 +470,10 @@ object Main {
       }
     }
 
+    val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
     for {
       data     <- args.samplesPath match {
-                    case RawSamples(path, n)       => loadRawSamples(path, n, requireLabels = false)
+                    case RawSamples(path, n)       => loadRawSamples(path, n, requireLabels = false, debugger)
                     case PreprocessedSamples(path) => loadPreprocessedSamples(path, requireLabels = false)
                   }
       nns      <- loadNeuralNetworks(args.neuralNetworkPaths)
@@ -470,7 +482,8 @@ object Main {
   }
 
   private def prepare(args: Command.Prepare): ![Unit] = {
-    loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false).map { labeledData =>
+    val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
+    loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, debugger).map { labeledData =>
       labeledData.map {
 
         case Data.Raw(hotspots)            =>

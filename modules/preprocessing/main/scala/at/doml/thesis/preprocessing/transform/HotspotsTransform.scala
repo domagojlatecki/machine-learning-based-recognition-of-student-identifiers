@@ -7,7 +7,7 @@ import at.doml.thesis.util.Vec
 
 object HotspotsTransform {
 
-  def apply(canvas: Canvas, index: Int)(implicit debugger: CanvasDebugger): Vec[Point, 5] = {
+  def apply(canvas: Canvas, canvasName: String)(implicit debugger: CanvasDebugger): Vec[Point, 5] = {
     val initHotspotCentroids: Vec[Point, 5] = Vec.tabulate(5) {
       case 0 => Point(canvas.width / 2.0, canvas.height / 2.0)
       case 1 => Point(canvas.width / 2.0, 0.0)
@@ -42,7 +42,7 @@ object HotspotsTransform {
         }
       },
       "hotspots",
-      index
+      canvasName
     )
 
     result

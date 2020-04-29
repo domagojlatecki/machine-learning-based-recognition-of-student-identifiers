@@ -22,6 +22,7 @@ object Command {
 
   final case class Train(
     samplesPath:           SamplesPath,
+    debugRoot:             Option[Path],
     outputFile:            Path,
     neuralNetworkProvider: NeuralNetworkProvider,
     step:                  Double,
@@ -33,12 +34,14 @@ object Command {
 
   final case class Test(
     samplesPath:        SamplesPath,
+    debugRoot:          Option[Path],
     neuralNetworkPaths: List[Path],
     ensemble:           Boolean
   ) extends Command
 
   final case class Prepare(
     imagesPath:      Path,
+    debugRoot:       Option[Path],
     numbersPerImage: Int,
     outputFile:      Path
   ) extends Command

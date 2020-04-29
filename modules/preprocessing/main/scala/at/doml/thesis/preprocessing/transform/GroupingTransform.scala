@@ -8,8 +8,9 @@ import scala.collection.mutable.ListBuffer
 object GroupingTransform {
 
   def apply(
-    canvas: Canvas,
-    n:      Int
+    canvas:     Canvas,
+    canvasName: String,
+    n:          Int
   )(
     centroids: Vec[Point, n.type]
   )(
@@ -45,7 +46,7 @@ object GroupingTransform {
         }
       }
 
-      debugger(result, "grouping", i.v)
+      debugger(result, "grouping-individual", s"$canvasName-${i.v}")
       result
     }
   }
