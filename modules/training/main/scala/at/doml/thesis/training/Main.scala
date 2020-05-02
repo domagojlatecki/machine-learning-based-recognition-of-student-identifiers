@@ -448,8 +448,8 @@ object Main {
       for (out <- outs) {
         var correct = 0
         var total = 0
-        val correctByNumber = new Array[Int](10)
-        val totalByNumber = new Array[Int](10)
+        val guessesByNumber = Array.fill(10, 10)(0)
+        val totalByNumber = Array.fill(10)(0)
 
         out.underlying.foreach { o =>
           val prediction = o._1.mapWithIndex((v, i) => (v, i)).maxBy(_._1)._2.v
@@ -459,10 +459,10 @@ object Main {
             case Some(label) =>
               total += 1
               totalByNumber(label) += 1
+              guessesByNumber(label)(prediction) += 1
 
               if (prediction == label) {
                 correct += 1
-                correctByNumber(label) += 1
               }
 
             case None =>
@@ -471,10 +471,13 @@ object Main {
         }
 
         val percentagesByNumber = totalByNumber.zipWithIndex.map { case (total, i) =>
-          f"[$i] ${100.0 * correctByNumber(i) / total}%.2f%%"
+          guessesByNumber(i).zipWithIndex.map { case (guess, j) =>
+            f" - guessed as [$j]: ${100.0 * guess / total}%.2f%%"
+          }.mkString(s"Number [$i]:\n", "\n", "\n")
         }
 
-        println(f"Test accuracy: ${100.0 * correct / total}%.2f%%, ${percentagesByNumber.mkString(", ")}")
+        println(f"Test accuracy: ${100.0 * correct / total}%.2f%%")
+        println(percentagesByNumber.mkString("\n"))
       }
     }
 

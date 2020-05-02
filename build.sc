@@ -200,7 +200,6 @@ object `gradient-descent` extends ScalaModule {
 object training extends ScalaModule {
   override def moduleDeps = Seq(preprocessing, `gradient-descent`)
   override def mainClass = T { Some("at.doml.thesis.training.Main") }
-  override def ivyDeps = Agg(ivy"com.oracle.substratevm:svm:19.1.0")
 }
 
 private val allModules = Seq[ScalaModule](

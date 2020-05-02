@@ -12,7 +12,7 @@ final class FileCanvasDebugger(debugRoot: Path) extends CanvasDebugger {
     val debugDir = debugRoot.resolve(s"debug-$debugStepName")
 
     if (debugDir.toFile.mkdir()) {
-      println(s"[DEBUG] Creating debug directory: $debugDir")
+      println(s"Creating debug directory: $debugDir")
     }
 
     val outPath = debugDir.resolve(s"$canvasName.png")
