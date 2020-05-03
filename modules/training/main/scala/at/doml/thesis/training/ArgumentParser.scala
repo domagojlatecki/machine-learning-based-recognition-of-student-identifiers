@@ -313,6 +313,11 @@ object ArgumentParser {
         "Ensemble neural networks into a single classifier, disabled by default",
         ""
       )
+      case object DetailByNumber  extends Arg(
+        "--detail-by-number",
+        "Print detailed statistics by number, disabled by default",
+        ""
+      )
     }
 
     final case class ArgsBuilder(
@@ -320,7 +325,8 @@ object ArgumentParser {
       debugRoot:          Option[Path]        = None,
       neuralNetworkPaths: List[Path]          = Nil,
       numbersPerImage:    Int                 = 10,
-      ensemble:           Boolean             = false
+      ensemble:           Boolean             = false,
+      detailByNumber:     Boolean             = false
     )
 
     type S = State
@@ -349,9 +355,10 @@ object ArgumentParser {
 
         case State.Init =>
           namedStates.find(_.name == arg) match {
-            case Some(State.Ensemble) => Right((State.Init, acc.copy(ensemble = true)))
-            case Some(nextState)      => Right((nextState, acc))
-            case None                 => Left(UnknownArgumentError(arg))
+            case Some(State.Ensemble)       => Right((State.Init, acc.copy(ensemble = true)))
+            case Some(State.DetailByNumber) => Right((State.Init, acc.copy(detailByNumber = true)))
+            case Some(nextState)            => Right((nextState, acc))
+            case None                       => Left(UnknownArgumentError(arg))
           }
 
         case State.RawSamples =>
@@ -413,7 +420,8 @@ object ArgumentParser {
               samplesPath = sp,
               debugRoot = acc.debugRoot,
               neuralNetworkPaths = first :: rest,
-              ensemble = acc.ensemble
+              ensemble = acc.ensemble,
+              detailByNumber = acc.detailByNumber
             )
           )
 
@@ -541,14 +549,84 @@ object ArgumentParser {
     }
   }
 
+  private object AnalyzeCommandParser extends CommandParser {
+
+    sealed trait State extends Product with Serializable
+
+    sealed abstract class Arg(val name: String, val desc: String, val `type`: String) extends State with NamedState {
+      override def toString: String = name
+    }
+
+    object State {
+      case object Init     extends State
+      case object Hotspots extends Arg("--hotspots", "Root of hotspots dataset", "dir")
+    }
+
+    final case class ArgsBuilder(
+      hotspotsPath: Option[Path] = None
+    )
+
+    type S = State
+    type NS = Arg
+    type Acc = ArgsBuilder
+
+    val commandName: String = "analyze"
+
+    val namedStates: List[Arg] = List(
+      State.Hotspots
+    )
+
+    val initState: State = State.Init
+
+    val endStates: Set[State] = Set(initState)
+
+    val emptyAcc: ArgsBuilder = ArgsBuilder()
+
+    def applyState(arg: String, state: State, acc: ArgsBuilder): ![(State, ArgsBuilder)] = {
+      state match {
+
+        case State.Init =>
+          namedStates.find(_.name == arg) match {
+            case Some(nextState) => Right((nextState, acc))
+            case None            => Left(UnknownArgumentError(arg))
+          }
+
+        case State.Hotspots =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isDirectory) {
+            Right((State.Init, acc.copy(hotspotsPath = Some(path))))
+          } else {
+            Left(IllegalArgumentError(arg))
+          }
+      }
+    }
+
+    def buildArgs(acc: ArgsBuilder): ![Command.Analyze] = {
+
+      acc.hotspotsPath match {
+        case Some(hotspotsPath) =>
+          Right(
+            Command.Analyze(
+              hotspotsPath = hotspotsPath
+            )
+          )
+
+        case None =>
+          Left(MissingArgumentError("--hotspots"))
+      }
+    }
+  }
+
   def parse(arguments: List[String]): ![Command] = {
     def helpMessage: String =
       s"""Usage: command [arguments...]
-         |Available commands: train, test, prepare
+         |Available commands: train, test, prepare, analyze
          |
          |${TrainCommandParser.helpMessage}
          |${TestCommandParser.helpMessage}
          |${PrepareCommandParser.helpMessage}
+         |${AnalyzeCommandParser.helpMessage}
          |""".stripMargin
 
     arguments match {
@@ -561,6 +639,7 @@ object ArgumentParser {
           case "train"   => TrainCommandParser.parseArgs(args)
           case "test"    => TestCommandParser.parseArgs(args)
           case "prepare" => PrepareCommandParser.parseArgs(args)
+          case "analyze" => AnalyzeCommandParser.parseArgs(args)
           case _         => Left(UnknownCommandError(command))
         }
     }

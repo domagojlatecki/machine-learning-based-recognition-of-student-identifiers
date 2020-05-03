@@ -36,7 +36,8 @@ object Command {
     samplesPath:        SamplesPath,
     debugRoot:          Option[Path],
     neuralNetworkPaths: List[Path],
-    ensemble:           Boolean
+    ensemble:           Boolean,
+    detailByNumber:     Boolean
   ) extends Command
 
   final case class Prepare(
@@ -44,5 +45,9 @@ object Command {
     debugRoot:       Option[Path],
     numbersPerImage: Int,
     outputFile:      Path
+  ) extends Command
+
+  final case class Analyze(
+    hotspotsPath: Path
   ) extends Command
 }

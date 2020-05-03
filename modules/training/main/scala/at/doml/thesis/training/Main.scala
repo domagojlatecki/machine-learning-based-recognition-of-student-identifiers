@@ -88,7 +88,6 @@ object Main {
     }
   }
 
-  // TODO add debug data
   private def loadRawSamples(
     path:          Path,
     n:             Int,
@@ -290,7 +289,7 @@ object Main {
               } yield ForwardPass(layer, acc)
 
               nextAcc match {
-                case Left(err)      => Left(err)
+                case Left(err) => Left(err)
                 case Right(nn) => loop(rest, inSize)(nn)
               }
           }
@@ -477,7 +476,10 @@ object Main {
         }
 
         println(f"Test accuracy: ${100.0 * correct / total}%.2f%%")
-        println(percentagesByNumber.mkString("\n"))
+
+        if (args.detailByNumber) {
+          println(percentagesByNumber.mkString("\n"))
+        }
       }
     }
 
@@ -513,7 +515,47 @@ object Main {
     }
   }
 
-  // TODO add debug capability
+  private def analyze(args: Command.Analyze): ![Unit] = {
+    def similarity[S <: Int](v1: Vec[Double, S], v2: Vec[Double, S]): Double = {
+      val dotProduct = v1.mapWith(v2)(_ * _).underlying.sum
+      val v1SquareSum = v1.map(a => a * a).underlying.sum
+      val v2SquareSum = v2.map(a => a * a).underlying.sum
+
+      dotProduct / (math.sqrt(v1SquareSum) * math.sqrt(v2SquareSum))
+    }
+
+    loadPreprocessedSamples(args.hotspotsPath, requireLabels = true).map { labeledData =>
+      val averageByLabel = labeledData.underlying.groupBy { case d: Data.Labeled => d.label }
+        .filter(_._2.nonEmpty)
+        .map { case (label, data) =>
+          val indices = data(0).hotspots.indices
+          val averagePoints = for (i <- indices) yield {
+            var x = 0.0
+            var y = 0.0
+
+            for (j <- data.indices) {
+              x += data(j).hotspots(i).x
+              y += data(j).hotspots(i).y
+            }
+
+            ArraySeq(x / data.length, y / data.length)
+          }
+
+          (label, Vec.unsafeWrap[Double, 10](averagePoints.underlying.flatten))
+        }
+        .toList
+        .sortBy(_._1)
+
+      averageByLabel.foreach { case (label, center) =>
+        val similarities = averageByLabel.map { case (otherLabel, otherCenter) =>
+          f"[$otherLabel] ${similarity(center, otherCenter)}%.3f"
+        }
+        println(s"[$label] similarities:")
+        println(s"  ${similarities.mkString(", ")}")
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     val command = ArgumentParser.parse(args.toList) match {
       case Right(cmd) =>
@@ -532,6 +574,7 @@ object Main {
       case cmd: Command.Train   => train(cmd)
       case cmd: Command.Test    => test(cmd)
       case cmd: Command.Prepare => prepare(cmd)
+      case cmd: Command.Analyze => analyze(cmd)
     }
 
     result match {
