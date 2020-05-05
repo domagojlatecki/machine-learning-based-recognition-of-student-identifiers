@@ -1,11 +1,17 @@
 package at.doml.thesis.preprocessing.transform
 
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
-import at.doml.thesis.preprocessing.image.{Canvas, Color, Point}
-import at.doml.thesis.util.Vec
+import at.doml.thesis.preprocessing.image.{Canvas, Color, Pixel, Point}
+import at.doml.thesis.util.{Idx, Vec}
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 object GroupingTransform {
+
+  def groupColor(i: Int): Color = {
+    val random = new Random(i)
+    Color(255, random.nextInt(256), random.nextInt(256), random.nextInt(256))
+  }
 
   def apply(
     canvas:     Canvas,
@@ -16,17 +22,33 @@ object GroupingTransform {
   )(
     implicit debugger: CanvasDebugger
   ): Vec[Canvas, n.type] = {
+    def closestGroup(p: Pixel): Idx[n.type] = {
+      val coords = Point(p.x, p.y)
+      val distances = centroids.map(c => c.distance(coords)).mapWithIndex(Tuple2.apply)
+      distances.minBy(_._1)._2
+    }
+
     val groupedPixels: Vec[ListBuffer[Point], n.type] = Vec.fill(n)(ListBuffer.empty)
 
     canvas.pixels.filter(_.color == Color.Black).foreach { p =>
-      val coords = Point(p.x, p.y)
-      val distances = centroids.map(c => c.distance(coords)).mapWithIndex(Tuple2.apply)
-      val min = distances.minBy(_._1)._2
-
-      groupedPixels(min).append(coords)
+      groupedPixels(closestGroup(p)).append(Point(p.x, p.y))
     }
 
-    groupedPixels.mapWithIndex { (groupPoints, i) =>
+    debugger(
+      {
+        canvas.mapPixels { p =>
+          if (p.color == Color.Black) {
+            groupColor(closestGroup(p).v)
+          } else {
+            Color.White
+          }
+        }
+      },
+      "grouping",
+      canvasName
+    )
+
+    groupedPixels.map { groupPoints =>
       val points = groupPoints.toList
       val xs = points.map(_.x.toInt)
       val ys = points.map(_.y.toInt)
@@ -46,7 +68,6 @@ object GroupingTransform {
         }
       }
 
-      debugger(result, "grouping-individual", s"$canvasName-${i.v}")
       result
     }
   }
