@@ -48,6 +48,6 @@ object Command {
   ) extends Command
 
   final case class Analyze(
-    hotspotsPath: Path
+    featuresPath: Path
   ) extends Command
 }

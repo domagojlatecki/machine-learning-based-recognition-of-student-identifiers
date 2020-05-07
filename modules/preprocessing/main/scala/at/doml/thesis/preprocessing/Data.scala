@@ -1,15 +1,16 @@
 package at.doml.thesis.preprocessing
 
-import at.doml.thesis.preprocessing.image.Point
 import at.doml.thesis.util.Vec
 
 sealed trait Data extends Product with Serializable {
-  val hotspots: Vec[Point, 5]
+  val features: Vec[Double, Data.NumFeatures.type]
 }
 
 object Data {
 
-  final case class Raw(hotspots: Vec[Point, 5]) extends Data
+  val NumFeatures: Int = 20
 
-  final case class Labeled(hotspots: Vec[Point, 5], label: Int) extends Data
+  final case class Raw(features: Vec[Double, NumFeatures.type]) extends Data
+
+  final case class Labeled(features: Vec[Double, NumFeatures.type], label: Int) extends Data
 }

@@ -14,6 +14,8 @@ final case class Color(value: Int) extends AnyVal {
 object Color {
 
   val Red: Color = Color(255, 255, 0, 0)
+  val Green: Color = Color(255, 0, 255, 0)
+  val Blue: Color = Color(255, 0, 0, 255)
   val Black: Color = Color(255, 0, 0, 0)
   val White: Color = Color(255, 255, 255, 255)
 

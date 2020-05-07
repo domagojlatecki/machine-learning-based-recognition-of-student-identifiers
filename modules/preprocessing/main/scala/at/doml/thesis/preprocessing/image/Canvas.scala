@@ -5,6 +5,9 @@ import scala.collection.immutable.ArraySeq
 
 final case class Canvas(values: ArraySeq[Color], width: Int, height: Int) {
 
+  def get(x: Int, y: Int): Color =
+    values(x + y * width)
+
   def pixels: View[Pixel] =
     values.view.zipWithIndex.map { case (c, i) =>
       val x = i % width

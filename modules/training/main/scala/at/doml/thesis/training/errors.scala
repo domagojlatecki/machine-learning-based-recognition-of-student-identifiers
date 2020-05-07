@@ -41,3 +41,5 @@ final case class InvalidLayerInputDimension(dim: Int) extends Error(s"Invalid la
 final case class InvalidNumberOfNeurons(num: Int) extends Error(s"Invalid number of neurons: $num")
 
 final case class InvalidNeuronWeights(weights: String) extends Error(s"Invalid neuron weights: $weights")
+
+final case class ImageProcessingError(image: String) extends Error(s"Cannot correctly process image: $image")

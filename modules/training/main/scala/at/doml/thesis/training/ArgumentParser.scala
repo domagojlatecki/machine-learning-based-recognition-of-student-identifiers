@@ -2,7 +2,7 @@ package at.doml.thesis.training
 
 import java.nio.file.{Path, Paths}
 import at.doml.thesis.grad.BatchSize
-import at.doml.thesis.training.Command.{CreateFromLayout, LoadFromFile, NeuralNetworkProvider, PreprocessedSamples, RawSamples, SamplesPath}
+import at.doml.thesis.training.Command._
 import at.doml.thesis.training.Error.!
 import scala.annotation.tailrec
 
@@ -86,8 +86,8 @@ object ArgumentParser {
       case object BatchSize       extends Arg("--batch-size", "Batch size, default value: 'all'", "double | 'all'")
       case object MaxIters        extends Arg("--max-iters", "Max number of iterations, default value: 10000", "int")
       case object TargetError     extends Arg("--target-error", "Target error, default value: 10e-7", "double")
-      case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --hotspots", "dir")
-      case object PrepSamples     extends Arg("--hotspots", "Root of hotspots dataset, exclusive with --images", "dir")
+      case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --features", "dir")
+      case object PrepSamples     extends Arg("--features", "Root of features dataset, exclusive with --images", "dir")
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
       case object OutputPath      extends Arg("--output", "Output file for neural network", "file")
       case object LoadNetwork     extends Arg("--load", "Load neural network file, exclusive with --layout", "file")
@@ -281,10 +281,10 @@ object ArgumentParser {
           Left(MissingArgumentError("--output"))
 
         case (None, Some(_)) =>
-          Left(MissingArgumentError("--images or --hotspots"))
+          Left(MissingArgumentError("--images or --features"))
 
         case (None, None) =>
-          Left(MissingArgumentError("--images or --hotspots, --output"))
+          Left(MissingArgumentError("--images or --features, --output"))
       }
     }
   }
@@ -299,8 +299,8 @@ object ArgumentParser {
 
     object State {
       case object Init            extends State
-      case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --hotspots", "dir")
-      case object PrepSamples     extends Arg("--hotspots", "Root of hotspots dataset, exclusive with --images", "dir")
+      case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --features", "dir")
+      case object PrepSamples     extends Arg("--features", "Root of features dataset, exclusive with --images", "dir")
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
       case object DebugRoot       extends Arg("--debug", "Image debug data root, optional", "dir")
       case object NetworkPaths    extends Arg(
@@ -429,10 +429,10 @@ object ArgumentParser {
           Left(MissingArgumentError("--nn-paths"))
 
         case (None, _ :: _) =>
-          Left(MissingArgumentError("--images or --hotspots"))
+          Left(MissingArgumentError("--images or --features"))
 
         case (None, Nil) =>
-          Left(MissingArgumentError("--images or --hotspots, --nn-paths"))
+          Left(MissingArgumentError("--images or --features, --nn-paths"))
       }
     }
   }
@@ -559,11 +559,11 @@ object ArgumentParser {
 
     object State {
       case object Init     extends State
-      case object Hotspots extends Arg("--hotspots", "Root of hotspots dataset", "dir")
+      case object Features extends Arg("--features", "Root of features dataset", "dir")
     }
 
     final case class ArgsBuilder(
-      hotspotsPath: Option[Path] = None
+      featuresPath: Option[Path] = None
     )
 
     type S = State
@@ -573,7 +573,7 @@ object ArgumentParser {
     val commandName: String = "analyze"
 
     val namedStates: List[Arg] = List(
-      State.Hotspots
+      State.Features
     )
 
     val initState: State = State.Init
@@ -591,11 +591,11 @@ object ArgumentParser {
             case None            => Left(UnknownArgumentError(arg))
           }
 
-        case State.Hotspots =>
+        case State.Features =>
           val path = Paths.get(arg)
 
           if (path.toFile.isDirectory) {
-            Right((State.Init, acc.copy(hotspotsPath = Some(path))))
+            Right((State.Init, acc.copy(featuresPath = Some(path))))
           } else {
             Left(IllegalArgumentError(arg))
           }
@@ -604,16 +604,16 @@ object ArgumentParser {
 
     def buildArgs(acc: ArgsBuilder): ![Command.Analyze] = {
 
-      acc.hotspotsPath match {
-        case Some(hotspotsPath) =>
+      acc.featuresPath match {
+        case Some(featuresPath) =>
           Right(
             Command.Analyze(
-              hotspotsPath = hotspotsPath
+              featuresPath = featuresPath
             )
           )
 
         case None =>
-          Left(MissingArgumentError("--hotspots"))
+          Left(MissingArgumentError("--features"))
       }
     }
   }

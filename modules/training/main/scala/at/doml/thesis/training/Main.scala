@@ -8,7 +8,7 @@ import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
 import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.{Data, Preprocessor}
-import at.doml.thesis.preprocessing.image.{Canvas, Color, Point}
+import at.doml.thesis.preprocessing.image.{Canvas, Color}
 import at.doml.thesis.training.Command.{CreateFromLayout, LoadFromFile, PreprocessedSamples, RawSamples}
 import at.doml.thesis.training.Error.!
 import at.doml.thesis.util.Vec
@@ -22,27 +22,40 @@ import scala.util.{Failure, Success, Try}
 // TODO refactor
 object Main {
 
+  private type In = Data.NumFeatures.type
+  private val In: Data.NumFeatures.type = Data.NumFeatures
+
   private val FileNameWithLabelsRegex = "^([0-9]+)-.+?$".r
 
   private object PreprocessedDataExtractor {
-    private val FirstPointGroup = "([^,]+,[^,;)]+)"
-    private val PointGroup = "(?:;([^,]+,[^,;)]+))"
-    private val DataRegex = ("^\\{label=(none|[0-9]);\\(" + FirstPointGroup + (PointGroup * 4) + "\\)}$").r
+    private val FeatureGroup = "([^,;]+)[,;]"
+    private val DataRegex = ("^\\{label=(none|[0-9]);\\(" + (FeatureGroup * In) + "\\)}$").r
 
-    private object PointE {
-      private val PointRegex = "^([^,]+),([^,]+)$".r
-
-      def unapply(s: String): Option[Point] = s match {
-        case PointRegex(xs, ys) => xs.toDoubleOption.flatMap(x => ys.toDoubleOption.map(y => Point(x, y)))
-        case _                  => None
-      }
+    private object Feature {
+      def unapply(s: String): Option[Double] = s.toDoubleOption
     }
 
-    def unapply(line: String): Option[(Option[Int], Vec[Point, 5])] = {
+    def unapply(line: String): Option[(Option[Int], Vec[Double, In])] = {
       line match {
 
-        case DataRegex(label, PointE(p1), PointE(p2), PointE(p3), PointE(p4), PointE(p5)) =>
-          Some((label.toIntOption, Vec.unsafeWrap[Point, 5](ArraySeq(p1, p2, p3, p4, p5))))
+        case DataRegex(
+          label,
+          Feature(f1), Feature(f2), Feature(f3), Feature(f4), Feature(f5),
+          Feature(f6), Feature(f7), Feature(f8), Feature(f9), Feature(f10),
+          Feature(f11), Feature(f12), Feature(f13), Feature(f14), Feature(f15),
+          Feature(f16), Feature(f17), Feature(f18), Feature(f19), Feature(f20)
+        ) =>
+          Some(
+            (
+              label.toIntOption,
+              Vec.unsafeWrap[Double, In](
+                ArraySeq(
+                  f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
+                  f11, f12, f13, f14, f15, f16, f17, f18, f19, f20
+                )
+              )
+            )
+          )
 
         case _ =>
           None
@@ -111,7 +124,8 @@ object Main {
         if (labels.isEmpty && requireLabels) {
           Left(InvalidFileLabelsError(f.getName))
         } else {
-          Right(Preprocessor.process(canvas, f.getName.replaceAll("\\.png$", ""), valueOf[n.type])(labels, debugger))
+          Preprocessor.process(canvas, f.getName.replaceAll("\\.png$", ""), valueOf[n.type])(labels, debugger)
+            .toRight(ImageProcessingError(f.getName))
         }
       }
     }
@@ -156,10 +170,10 @@ object Main {
         lines.map(_.trim).filter(_.nonEmpty).foldLeft(init) { (acc, line) =>
           acc.flatMap { l =>
             val parsedLine = line match {
-              case PreprocessedDataExtractor(label, points) =>
+              case PreprocessedDataExtractor(label, features) =>
                 label match {
-                  case Some(v)                => Right(Data.Labeled(points, v.toInt))
-                  case None if !requireLabels => Right(Data.Raw(points))
+                  case Some(v)                => Right(Data.Labeled(features, v.toInt))
+                  case None if !requireLabels => Right(Data.Raw(features))
                   case _                      => Left(InvalidFileLabelsError(f.getName))
                 }
 
@@ -189,7 +203,7 @@ object Main {
     }
   }
 
-  private def loadNeuralNetwork(path: Path): ![NeuralNetwork[10, 10]] = {
+  private def loadNeuralNetwork(path: Path): ![NeuralNetwork[In, 10]] = {
     val res: ![List[String]] = Try(Files.readAllLines(path, StandardCharsets.UTF_8)) match {
       case Failure(_)     => Left(CannotLoadFileError(path.toFile.getName))
       case Success(lines) => Right(lines.asScala.toList)
@@ -267,12 +281,12 @@ object Main {
     }
 
     @tailrec
-    def loop(lines: List[String], in: Int)(acc: NeuralNetwork[in.type, 10]): ![NeuralNetwork[10, 10]] = {
+    def loop(lines: List[String], in: Int)(acc: NeuralNetwork[in.type, 10]): ![NeuralNetwork[In, 10]] = {
       lines match {
 
         case Nil =>
-          if (in == 10) {
-            Right(acc.asInstanceOf[NeuralNetwork[10, 10]])
+          if (in == In) {
+            Right(acc.asInstanceOf[NeuralNetwork[In, 10]])
           } else {
             Left(InvalidLayerInputDimension(in))
           }
@@ -315,20 +329,19 @@ object Main {
 
   private def train(args: Command.Train): ![Unit] = {
 
-    def convertToSamples(data: Vec[Data, Int]): Vec[Sample[10, 10], Int] = {
-      data.map { case Data.Labeled(hotspots, label) =>
-        val input = hotspots.underlying.flatMap(p => ArraySeq(p.x, p.y))
+    def convertToSamples(data: Vec[Data, Int]): Vec[Sample[In, 10], Int] = {
+      data.map { case Data.Labeled(features, label) =>
         val target = new Array[Double](10)
         target(label) = 1.0
 
         Sample(
-          Vec.unsafeWrap(input),
+          features,
           Vec.unsafeWrap(ArraySeq.unsafeWrapArray((target)))
         )
       }
     }
 
-    def trainNetwork(nn: NeuralNetwork[10, 10], samples: Vec[Sample[10, 10], Int]): Result[10, 10] = {
+    def trainNetwork(nn: NeuralNetwork[In, 10], samples: Vec[Sample[In, 10], Int]): Result[In, 10] = {
       val batchSize = args.batchSize match {
         case BatchSize.of(v) => v
         case BatchSize.all   => samples.length
@@ -352,7 +365,7 @@ object Main {
       result
     }
 
-    def writeResult(result: Result[10, 10]): ![Unit] = {
+    def writeResult(result: Result[In, 10]): ![Unit] = {
       result match {
         case Result.NoTrainingData(_) => println("No training data provided.")
         case Result.TargetError(_)    => println("Target error reached.")
@@ -395,7 +408,7 @@ object Main {
                  }
       nn      <- args.neuralNetworkProvider match {
                    case LoadFromFile(path)       => loadNeuralNetwork(path)
-                   case CreateFromLayout(layout) => Right(NeuralNetwork.random(10, layout, 10, (-0.4, 0.4)))
+                   case CreateFromLayout(layout) => Right(NeuralNetwork.random(In, layout, 10, (-0.4, 0.4)))
                  }
       samples  = convertToSamples(data)
       result   = trainNetwork(nn, samples)
@@ -404,33 +417,32 @@ object Main {
   }
 
   private def test(args: Command.Test): ![Unit] = {
-    final case class FlatData(hotspots: Vec[Double, 10], label: Option[Int])
+    final case class FlatData(features: Vec[Double, In], label: Option[Int])
 
     def flattenData(data: Vec[Data, Int]): Vec[FlatData, Int] = {
       data.map { d =>
-        val hotspots = d.hotspots.underlying.flatMap(p => ArraySeq(p.x, p.y))
         val label = d match {
           case Data.Labeled(_, l) => Some(l)
           case Data.Raw(_)        => None
         }
 
         FlatData(
-          Vec.unsafeWrap(hotspots),
+          d.features,
           label
         )
       }
     }
 
-    def loadNeuralNetworks(paths: List[Path]): ![List[NeuralNetwork[10, 10]]] = {
-      val init: ![List[NeuralNetwork[10, 10]]] = Right(Nil)
+    def loadNeuralNetworks(paths: List[Path]): ![List[NeuralNetwork[In, 10]]] = {
+      val init: ![List[NeuralNetwork[In, 10]]] = Right(Nil)
 
       paths.foldLeft(init) { (err, path) =>
         err.flatMap(loaded => loadNeuralNetwork(path).map(_ :: loaded))
       }
     }
 
-    def printAccuracy(nns: List[NeuralNetwork[10, 10]], data: Vec[FlatData, Int]): Unit = {
-      val allOuts = nns.map(nn => data.map(d => (nn.out(d.hotspots), d.label)))
+    def printAccuracy(nns: List[NeuralNetwork[In, 10]], data: Vec[FlatData, Int]): Unit = {
+      val allOuts = nns.map(nn => data.map(d => (nn.out(d.features), d.label)))
 
       val outs = if (args.ensemble) {
         val combined = allOuts.reduce { (data1, data2) =>
@@ -499,13 +511,11 @@ object Main {
     loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, debugger).map { labeledData =>
       labeledData.map {
 
-        case Data.Raw(hotspots)            =>
-          hotspots.underlying.map(p => s"${p.x},${p.y}")
-          .mkString("{label=none;(", ";", ")}")
+        case Data.Raw(features)            =>
+          features.underlying.mkString("{label=none;(", ",", ";)}")
 
-        case Data.Labeled(hotspots, label) =>
-          hotspots.underlying.map(p => s"${p.x},${p.y}")
-          .mkString(s"{label=$label;(", ";", ")}")
+        case Data.Labeled(features, label) =>
+          features.underlying.mkString(s"{label=$label;(", ",", ";)}")
       }
     }.flatMap { serializedData =>
       Try(Files.write(args.outputFile, serializedData.underlying.asJava, StandardCharsets.UTF_8)) match {
@@ -516,44 +526,47 @@ object Main {
   }
 
   private def analyze(args: Command.Analyze): ![Unit] = {
-    def similarity[S <: Int](v1: Vec[Double, S], v2: Vec[Double, S]): Double = {
-      val dotProduct = v1.mapWith(v2)(_ * _).underlying.sum
-      val v1SquareSum = v1.map(a => a * a).underlying.sum
-      val v2SquareSum = v2.map(a => a * a).underlying.sum
-
-      dotProduct / (math.sqrt(v1SquareSum) * math.sqrt(v2SquareSum))
-    }
-
-    loadPreprocessedSamples(args.hotspotsPath, requireLabels = true).map { labeledData =>
-      val averageByLabel = labeledData.underlying.groupBy { case d: Data.Labeled => d.label }
-        .filter(_._2.nonEmpty)
-        .map { case (label, data) =>
-          val indices = data(0).hotspots.indices
-          val averagePoints = for (i <- indices) yield {
-            var x = 0.0
-            var y = 0.0
-
-            for (j <- data.indices) {
-              x += data(j).hotspots(i).x
-              y += data(j).hotspots(i).y
-            }
-
-            ArraySeq(x / data.length, y / data.length)
-          }
-
-          (label, Vec.unsafeWrap[Double, 10](averagePoints.underlying.flatten))
-        }
-        .toList
-        .sortBy(_._1)
-
-      averageByLabel.foreach { case (label, center) =>
-        val similarities = averageByLabel.map { case (otherLabel, otherCenter) =>
-          f"[$otherLabel] ${similarity(center, otherCenter)}%.3f"
-        }
-        println(s"[$label] similarities:")
-        println(s"  ${similarities.mkString(", ")}")
-      }
-    }
+    // TODO fill in
+    println(" -- Not yet implemented -- ")
+    Right(())
+//    def similarity[S <: Int](v1: Vec[Double, S], v2: Vec[Double, S]): Double = {
+//      val dotProduct = v1.mapWith(v2)(_ * _).underlying.sum
+//      val v1SquareSum = v1.map(a => a * a).underlying.sum
+//      val v2SquareSum = v2.map(a => a * a).underlying.sum
+//
+//      dotProduct / (math.sqrt(v1SquareSum) * math.sqrt(v2SquareSum))
+//    }
+//
+//    loadPreprocessedSamples(args.hotspotsPath, requireLabels = true).map { labeledData =>
+//      val averageByLabel = labeledData.underlying.groupBy { case d: Data.Labeled => d.label }
+//        .filter(_._2.nonEmpty)
+//        .map { case (label, data) =>
+//          val indices = data(0).features.indices
+//          val averagePoints = for (i <- indices) yield {
+//            var x = 0.0
+//            var y = 0.0
+//
+//            for (j <- data.indices) {
+//              x += data(j).hotspots(i).x
+//              y += data(j).hotspots(i).y
+//            }
+//
+//            ArraySeq(x / data.length, y / data.length)
+//          }
+//
+//          (label, Vec.unsafeWrap[Double, 10](averagePoints.underlying.flatten))
+//        }
+//        .toList
+//        .sortBy(_._1)
+//
+//      averageByLabel.foreach { case (label, center) =>
+//        val similarities = averageByLabel.map { case (otherLabel, otherCenter) =>
+//          f"[$otherLabel] ${similarity(center, otherCenter)}%.3f"
+//        }
+//        println(s"[$label] similarities:")
+//        println(s"  ${similarities.mkString(", ")}")
+//      }
+//    }
   }
 
   def main(args: Array[String]): Unit = {

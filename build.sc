@@ -160,9 +160,9 @@ trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
       ivy"org.scalatest::scalatest:${Versions.ScalaTest}",
       ivy"org.scalamock::scalamock:${Versions.ScalaMock}"
     )
-    override def testFrameworks = Seq(
-      "org.scalatest.tools.Framework"
-    )
+    override def testFrameworks = T {
+      Seq("org.scalatest.tools.Framework")
+    }
   }
 
   val unit = new ScalaTests('unit, implicitly)
