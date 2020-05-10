@@ -497,6 +497,7 @@ object Main {
 
   private def prepare(args: Command.Prepare): ![Unit] = {
     val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
+
     loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, debugger).map { labeledData =>
       labeledData.map {
 
@@ -515,47 +516,76 @@ object Main {
   }
 
   private def analyze(args: Command.Analyze): ![Unit] = {
-    // TODO fill in
-    println(" -- Not yet implemented -- ")
-    Right(())
-//    def similarity[S <: Int](v1: Vec[Double, S], v2: Vec[Double, S]): Double = {
-//      val dotProduct = v1.mapWith(v2)(_ * _).underlying.sum
-//      val v1SquareSum = v1.map(a => a * a).underlying.sum
-//      val v2SquareSum = v2.map(a => a * a).underlying.sum
-//
-//      dotProduct / (math.sqrt(v1SquareSum) * math.sqrt(v2SquareSum))
-//    }
-//
-//    loadPreprocessedSamples(args.hotspotsPath, requireLabels = true).map { labeledData =>
-//      val averageByLabel = labeledData.underlying.groupBy { case d: Data.Labeled => d.label }
-//        .filter(_._2.nonEmpty)
-//        .map { case (label, data) =>
-//          val indices = data(0).features.indices
-//          val averagePoints = for (i <- indices) yield {
-//            var x = 0.0
-//            var y = 0.0
-//
-//            for (j <- data.indices) {
-//              x += data(j).hotspots(i).x
-//              y += data(j).hotspots(i).y
-//            }
-//
-//            ArraySeq(x / data.length, y / data.length)
-//          }
-//
-//          (label, Vec.unsafeWrap[Double, 10](averagePoints.underlying.flatten))
-//        }
-//        .toList
-//        .sortBy(_._1)
-//
-//      averageByLabel.foreach { case (label, center) =>
-//        val similarities = averageByLabel.map { case (otherLabel, otherCenter) =>
-//          f"[$otherLabel] ${similarity(center, otherCenter)}%.3f"
-//        }
-//        println(s"[$label] similarities:")
-//        println(s"  ${similarities.mkString(", ")}")
-//      }
-//    }
+    final case class Stats(min: Double, max: Double, average: Double, deviation: Double)
+
+    def similarity(v1: Vec[Double, In], v2: Vec[Double, In]): Double = {
+      val dotProduct = v1.mapWith(v2)(_ * _).underlying.sum
+      val v1SquareSum = v1.map(a => a * a).underlying.sum
+      val v2SquareSum = v2.map(a => a * a).underlying.sum
+
+      dotProduct / (math.sqrt(v1SquareSum) * math.sqrt(v2SquareSum))
+    }
+
+    // TODO do not allow empty data
+    loadPreprocessedSamples(args.featuresPath, requireLabels = true).map { labeledData =>
+      val statsByLabel = labeledData.underlying.groupBy { case d: Data.Labeled => d.label }
+        .filter(_._2.nonEmpty)
+        .toList
+        .map { case (label, data) =>
+          val indices = data(0).features.indices
+          val minMaxAverage = for (i <- indices) yield {
+            var sum = 0.0
+            var min = 0.0
+            var max = 0.0
+
+            for (j <- data.indices) {
+              val feature = data(j).features(i)
+
+              min = min min feature
+              max = max max feature
+              sum += feature
+            }
+
+            (min, max, sum / data.length)
+          }
+
+          val stats = minMaxAverage.mapWithIndex { case ((min, max, average), i) =>
+            var sum = 0.0
+
+            for (j <- data.indices) {
+              sum += math.pow(data(j).features(i) - average, 2.0)
+            }
+
+            Stats(min, max, average, sum / (data.length - 1)) // TODO handle edge case
+          }
+
+          (label, stats)
+        }
+        .sortBy(_._1)
+
+      statsByLabel.foreach { case (label, stats) =>
+        val similarities = statsByLabel.map { case (otherLabel, otherStats) =>
+          val sim = similarity(stats.map(_.average), otherStats.map(_.average))
+          val same = label == otherLabel
+          val color = if (sim <= 0.9 || same) "\u001B[32m" else if (sim <= 0.95) "\u001B[33m" else "\u001B[31m"
+
+          f"$color[$otherLabel] $sim%.3f\u001B[0m"
+        }
+
+        val features = stats.map { stat =>
+          val percentage = (stat.deviation / stat.average) * 100.0
+          val color = if (percentage <= 1.0) "\u001B[32m" else if (percentage <= 10.0) "\u001B[33m" else "\u001B[31m"
+
+          f"$color${stat.average}%.3f [${stat.min}%.3f - ${stat.max}%.3f] ±" +
+            f" ${stat.deviation}%.3f ($percentage%.2f%%)\u001B[0m"
+        }.underlying
+
+        println(s"[$label]:")
+        println(s"  - similarities: ${similarities.mkString(", ")}")
+        println(s"  - features: ${features.mkString("\n    ", "\n    ", "\n")}")
+        println()
+      }
+    }
   }
 
   def main(args: Array[String]): Unit = {
