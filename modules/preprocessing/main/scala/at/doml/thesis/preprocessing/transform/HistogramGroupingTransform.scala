@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable.ArrayBuffer
 
+// TODO refactor
 object HistogramGroupingTransform {
 
   private implicit final class Tuple2Ops[A, B](val tuple2: (A, B)) extends AnyVal {

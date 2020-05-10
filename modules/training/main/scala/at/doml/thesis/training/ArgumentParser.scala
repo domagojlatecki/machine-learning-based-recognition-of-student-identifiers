@@ -341,7 +341,8 @@ object ArgumentParser {
       State.NumbersPerImage,
       State.Ensemble,
       State.DebugRoot,
-      State.NetworkPaths
+      State.NetworkPaths,
+      State.DetailByNumber
     )
 
     val initState: State = State.Init

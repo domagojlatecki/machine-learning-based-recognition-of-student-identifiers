@@ -8,7 +8,7 @@ sealed trait Data extends Product with Serializable {
 
 object Data {
 
-  val NumFeatures: Int = 20
+  val NumFeatures: Int = 24
 
   final case class Raw(features: Vec[Double, NumFeatures.type]) extends Data
 

@@ -31,31 +31,16 @@ object Main {
     private val FeatureGroup = "([^,;]+)[,;]"
     private val DataRegex = ("^\\{label=(none|[0-9]);\\(" + (FeatureGroup * In) + "\\)}$").r
 
-    private object Feature {
-      def unapply(s: String): Option[Double] = s.toDoubleOption
+    private object Features {
+      def unapply(s: List[String]): Option[List[Double]] =
+        Some(s.flatMap(_.toDoubleOption))
     }
 
     def unapply(line: String): Option[(Option[Int], Vec[Double, In])] = {
-      line match {
+      DataRegex.unapplySeq(line) match {
 
-        case DataRegex(
-          label,
-          Feature(f1), Feature(f2), Feature(f3), Feature(f4), Feature(f5),
-          Feature(f6), Feature(f7), Feature(f8), Feature(f9), Feature(f10),
-          Feature(f11), Feature(f12), Feature(f13), Feature(f14), Feature(f15),
-          Feature(f16), Feature(f17), Feature(f18), Feature(f19), Feature(f20)
-        ) =>
-          Some(
-            (
-              label.toIntOption,
-              Vec.unsafeWrap[Double, In](
-                ArraySeq(
-                  f1, f2, f3, f4, f5, f6, f7, f8, f9, f10,
-                  f11, f12, f13, f14, f15, f16, f17, f18, f19, f20
-                )
-              )
-            )
-          )
+        case Some(label :: Features(features)) if features.length == In =>
+          Some(label.toIntOption, Vec.unsafeWrap[Double, In](features.to(ArraySeq)))
 
         case _ =>
           None
@@ -482,9 +467,13 @@ object Main {
         }
 
         val percentagesByNumber = totalByNumber.zipWithIndex.map { case (total, i) =>
-          guessesByNumber(i).zipWithIndex.map { case (guess, j) =>
-            f" - guessed as [$j]: ${100.0 * guess / total}%.2f%%"
-          }.mkString(s"Number [$i]:\n", "\n", "\n")
+          if (total == 0) {
+            s"No numbers guessed as [$i]"
+          } else {
+            guessesByNumber(i).zipWithIndex.map { case (guess, j) =>
+              f" - guessed as [$j]: ${100.0 * guess / total}%.2f%%"
+            }.mkString(s"Number [$i]:\n", "\n", "\n")
+          }
         }
 
         println(f"Test accuracy: ${100.0 * correct / total}%.2f%%")

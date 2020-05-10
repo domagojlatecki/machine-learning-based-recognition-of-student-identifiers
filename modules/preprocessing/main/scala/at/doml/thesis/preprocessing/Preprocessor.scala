@@ -22,13 +22,15 @@ object Preprocessor {
     val contrast = ContrastTransform(grayscale, canvasName)
     val histogramGroups: Option[Vec[Canvas, n.type]] =
       if (n <= 1) {
-        Some(Vec.unsafeWrap(ArraySeq(canvas)))
+        Some(Vec.unsafeWrap(ArraySeq(contrast)))
       } else {
         HistogramGroupingTransform(contrast, canvasName, n)
       }
 
     histogramGroups.map { groups =>
-      val features = groups.mapWithIndex((c, i) => FeaturesTransform.apply(c, s"${canvasName}_$i.png"))
+      val features = groups
+        .mapWithIndex((c, i) => ResizeTransform(c, s"${canvasName}_${i.v}.png"))
+        .mapWithIndex((c, i) => FeaturesTransform(c, s"${canvasName}_${i.v}.png"))
 
       labels match {
         case None     => features.map(Data.Raw)
