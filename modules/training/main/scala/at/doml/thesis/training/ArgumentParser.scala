@@ -246,7 +246,7 @@ object ArgumentParser {
           result match {
 
             case Some(v) if v.forall(_ > 0) =>
-              Right((State.Init, acc.copy(neuralNetworkProvider = CreateFromLayout(v))))
+              Right((State.Init, acc.copy(neuralNetworkProvider = CreateFromLayout(v.reverse))))
 
             case _ =>
               Left(IllegalArgumentError(arg))
@@ -318,6 +318,11 @@ object ArgumentParser {
         "Print detailed statistics by number, disabled by default",
         ""
       )
+      case object PrintMisses     extends Arg(
+        "--print-misses",
+        "Print missed predictions by file name, disabled by default",
+        ""
+      )
     }
 
     final case class ArgsBuilder(
@@ -326,7 +331,8 @@ object ArgumentParser {
       neuralNetworkPaths: List[Path]          = Nil,
       numbersPerImage:    Int                 = 10,
       ensemble:           Boolean             = false,
-      detailByNumber:     Boolean             = false
+      detailByNumber:     Boolean             = false,
+      printMisses:        Boolean             = false
     )
 
     type S = State
@@ -342,7 +348,8 @@ object ArgumentParser {
       State.Ensemble,
       State.DebugRoot,
       State.NetworkPaths,
-      State.DetailByNumber
+      State.DetailByNumber,
+      State.PrintMisses
     )
 
     val initState: State = State.Init
@@ -358,6 +365,7 @@ object ArgumentParser {
           namedStates.find(_.name == arg) match {
             case Some(State.Ensemble)       => Right((State.Init, acc.copy(ensemble = true)))
             case Some(State.DetailByNumber) => Right((State.Init, acc.copy(detailByNumber = true)))
+            case Some(State.PrintMisses)    => Right((State.Init, acc.copy(printMisses = true)))
             case Some(nextState)            => Right((nextState, acc))
             case None                       => Left(UnknownArgumentError(arg))
           }
@@ -422,7 +430,8 @@ object ArgumentParser {
               debugRoot = acc.debugRoot,
               neuralNetworkPaths = first :: rest,
               ensemble = acc.ensemble,
-              detailByNumber = acc.detailByNumber
+              detailByNumber = acc.detailByNumber,
+              printMisses = acc.printMisses
             )
           )
 

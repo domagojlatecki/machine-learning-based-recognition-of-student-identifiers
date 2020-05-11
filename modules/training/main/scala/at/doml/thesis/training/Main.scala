@@ -29,18 +29,23 @@ object Main {
 
   private object PreprocessedDataExtractor {
     private val FeatureGroup = "([^,;]+)[,;]"
-    private val DataRegex = ("^\\{label=(none|[0-9]);\\(" + (FeatureGroup * In) + "\\)}$").r
+    private val DataRegex = ("^\\{label=(none|[0-9]);file=([^;]+);index=([0-9]+);\\(" + (FeatureGroup * In) + "\\)}$").r
 
     private object Features {
       def unapply(s: List[String]): Option[List[Double]] =
         Some(s.flatMap(_.toDoubleOption))
     }
 
-    def unapply(line: String): Option[(Option[Int], Vec[Double, In])] = {
+    private object IntValue {
+      def unapply(s: String): Option[Int] =
+        s.toIntOption
+    }
+
+    def unapply(line: String): Option[(Option[Int], String, Int, Vec[Double, In])] = {
       DataRegex.unapplySeq(line) match {
 
-        case Some(label :: Features(features)) if features.length == In =>
-          Some(label.toIntOption, Vec.unsafeWrap[Double, In](features.to(ArraySeq)))
+        case Some(label :: file :: IntValue(index) :: Features(features)) if features.length == In =>
+          Some(label.toIntOption, file, index, Vec.unsafeWrap[Double, In](features.to(ArraySeq)))
 
         case _ =>
           None
@@ -155,10 +160,10 @@ object Main {
         lines.map(_.trim).filter(_.nonEmpty).foldLeft(init) { (acc, line) =>
           acc.flatMap { l =>
             val parsedLine = line match {
-              case PreprocessedDataExtractor(label, features) =>
+              case PreprocessedDataExtractor(label, file, index, features) =>
                 label match {
-                  case Some(v)                => Right(Data.Labeled(features, v.toInt))
-                  case None if !requireLabels => Right(Data.Raw(features))
+                  case Some(v)                => Right(Data.Labeled(features, v.toInt, file, index))
+                  case None if !requireLabels => Right(Data.Raw(features, file, index))
                   case _                      => Left(InvalidFileLabelsError(f.getName))
                 }
 
@@ -315,7 +320,7 @@ object Main {
   private def train(args: Command.Train): ![Unit] = {
 
     def convertToSamples(data: Vec[Data, Int]): Vec[Sample[In, 10], Int] = {
-      data.map { case Data.Labeled(features, label) =>
+      data.map { case Data.Labeled(features, label, _, _) =>
         val target = new Array[Double](10)
         target(label) = 1.0
 
@@ -402,18 +407,22 @@ object Main {
   }
 
   private def test(args: Command.Test): ![Unit] = {
-    final case class FlatData(features: Vec[Double, In], label: Option[Int])
+    final case class FlatData(features: Vec[Double, In], label: Option[Int], file: String, index: Int)
+    final case class Outputs(outs: Vec[Double, 10], label: Option[Int], file: String, index: Int)
+    final case class Prediction(prediction: Int, label: Option[Int], file: String, index: Int)
 
     def flattenData(data: Vec[Data, Int]): Vec[FlatData, Int] = {
       data.map { d =>
         val label = d match {
-          case Data.Labeled(_, l) => Some(l)
-          case Data.Raw(_)        => None
+          case Data.Labeled(_, l, _, _) => Some(l)
+          case Data.Raw(_, _, _)        => None
         }
 
         FlatData(
           d.features,
-          label
+          label,
+          d.file,
+          d.index
         )
       }
     }
@@ -427,12 +436,12 @@ object Main {
     }
 
     def printAccuracy(nns: List[NeuralNetwork[In, 10]], data: Vec[FlatData, Int]): Unit = {
-      val allOuts = nns.map(nn => data.map(d => (nn.out(d.features), d.label)))
+      val allOuts = nns.map(nn => data.map(d => Outputs(nn.out(d.features), d.label, d.file, d.index)))
 
       val outs = if (args.ensemble) {
         val combined = allOuts.reduce { (data1, data2) =>
           data1.mapWith(data2) { (outs1, outs2) =>
-            (outs1._1.mapWith(outs2._1)(_ + _), outs1._2)
+            Outputs(outs1.outs.mapWith(outs2.outs)(_ + _), outs1.label, outs1.file, outs1.index)
           }
         }
 
@@ -446,18 +455,19 @@ object Main {
         var total = 0
         val guessesByNumber = Array.fill(10, 10)(0)
         val totalByNumber = Array.fill(10)(0)
+        val predictions = out.map { o =>
+          Prediction(o.outs.mapWithIndex((v, i) => (v, i)).maxBy(_._1)._2.v, o.label, o.file, o.index)
+        }
 
-        out.underlying.foreach { o =>
-          val prediction = o._1.mapWithIndex((v, i) => (v, i)).maxBy(_._1)._2.v
-
-          o._2 match {
+        predictions.underlying.foreach { p =>
+          p.label match {
 
             case Some(label) =>
               total += 1
               totalByNumber(label) += 1
-              guessesByNumber(label)(prediction) += 1
+              guessesByNumber(label)(p.prediction) += 1
 
-              if (prediction == label) {
+              if (p.prediction == label) {
                 correct += 1
               }
 
@@ -481,6 +491,17 @@ object Main {
         if (args.detailByNumber) {
           println(percentagesByNumber.mkString("\n"))
         }
+
+        if (args.printMisses) {
+          predictions.underlying.groupBy(_.file).foreach { case (file, prediction) =>
+            val isMiss = prediction.exists(p => !p.label.contains(p.prediction))
+
+            if (isMiss) {
+              val sorted = prediction.sortBy(_.index).map(_.prediction).mkString("")
+              println(s"$file guessed as: $sorted")
+            }
+          }
+        }
       }
     }
 
@@ -501,11 +522,11 @@ object Main {
     loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, debugger).map { labeledData =>
       labeledData.map {
 
-        case Data.Raw(features)            =>
-          features.underlying.mkString("{label=none;(", ",", ";)}")
+        case Data.Raw(features, file, index)            =>
+          features.underlying.mkString(s"{label=none;file=$file;index=$index;(", ",", ";)}")
 
-        case Data.Labeled(features, label) =>
-          features.underlying.mkString(s"{label=$label;(", ",", ";)}")
+        case Data.Labeled(features, label, file, index) =>
+          features.underlying.mkString(s"{label=$label;file=$file;index=$index;(", ",", ";)}")
       }
     }.flatMap { serializedData =>
       Try(Files.write(args.outputFile, serializedData.underlying.asJava, StandardCharsets.UTF_8)) match {

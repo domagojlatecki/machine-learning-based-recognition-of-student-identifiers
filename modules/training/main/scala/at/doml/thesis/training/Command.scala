@@ -37,7 +37,8 @@ object Command {
     debugRoot:          Option[Path],
     neuralNetworkPaths: List[Path],
     ensemble:           Boolean,
-    detailByNumber:     Boolean
+    detailByNumber:     Boolean,
+    printMisses:        Boolean
   ) extends Command
 
   final case class Prepare(

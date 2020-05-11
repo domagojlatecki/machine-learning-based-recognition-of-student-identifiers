@@ -33,8 +33,8 @@ object Preprocessor {
         .mapWithIndex((c, i) => FeaturesTransform(c, s"${canvasName}_${i.v}.png"))
 
       labels match {
-        case None     => features.map(Data.Raw)
-        case Some(ls) => features.mapWith(ls)(Data.Labeled)
+        case None     => features.mapWithIndex((fs, index) => Data.Raw(fs, canvasName, index.v))
+        case Some(ls) => features.mapWithIndex((fs, index) => Data.Labeled(fs, ls(index), canvasName, index.v))
       }
     }
   }
