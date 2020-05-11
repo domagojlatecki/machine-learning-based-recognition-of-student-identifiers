@@ -21,8 +21,8 @@ final case class Canvas(values: ArraySeq[Color], width: Int, height: Int) {
   def mapPixels(f: Pixel => Color): Canvas =
     Canvas(pixels.map(f).to(ArraySeq), width, height)
 
-  def getAllPointsWithColor(color: Color): ArraySeq[Point] =
-    pixels.filter(_.color == color).map(p => Point(p.x, p.y)).to(ArraySeq)
+  def getAllPixelsWithColor(color: Color): View[Pixel] =
+    pixels.filter(_.color == color)
 }
 
 object Canvas {
