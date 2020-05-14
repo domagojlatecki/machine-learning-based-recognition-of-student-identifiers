@@ -52,6 +52,21 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
   def mapWithIndex[B : ClassTag](f: (A, Idx[S]) => B): Vec[B, S] =
     new Vec(ArraySeq.tabulate(length)(i => f(underlying(i), Idx(i))))
 
+  def parMapWithIndex[B : ClassTag](f: (A, Idx[S]) => B)(implicit par: Parallel): Vec[B, S] = {
+    val out = new Array[B](length)
+    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices =>
+      () => {
+        for (i <- indices) {
+          out(i) = f(underlying(i), Idx(i))
+        }
+      }
+    }
+
+    par.execute(tasks)
+
+    new Vec(ArraySeq.unsafeWrapArray(out))
+  }
+
   def minBy[B](f: A => B)(implicit cmp: Ordering[B]): A =
     underlying.minBy(f)
 

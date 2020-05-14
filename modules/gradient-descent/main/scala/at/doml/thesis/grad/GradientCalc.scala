@@ -38,7 +38,7 @@ object GradientCalc {
 
        case ForwardPass(first, rest) =>
          val outs = sampleInputs.parMap(first.out)
-         val layerData = LayerData(first.layer.neurons, sampleInputs, sampleInputs.parMap(first.out), first.accGrads)
+         val layerData = LayerData(first.layer.neurons, sampleInputs, outs, first.accGrads)
          loop(rest, outs, FirstLayerData(layerData))
 
        case LastLayer(lg) =>
@@ -65,7 +65,7 @@ object GradientCalc {
       prevNeurons: Vec[Neuron[O], NO],
       prevDeltas:  Vec[Vec[Double, NO], N]
     ): Vec[Vec[Double, O], N] = {
-      layerData.sampleOutputs.mapWithIndex { (outputs, n) =>
+      layerData.sampleOutputs.parMapWithIndex { (outputs, n) =>
         outputs.mapWithIndex { (y, o) =>
           var sum = 0.0
 
@@ -101,11 +101,19 @@ object GradientCalc {
           par.execute(tasks).sum
         }
 
-        var w0 = 0.0
+        val w0Tasks = layerData.sampleInputs.indices.grouped(par.itemsPerThread).map { indices =>
+          () => {
+            var sum = 0.0
 
-        for (n <- layerData.sampleInputs.indices) {
-          w0 += deltas(n)(o)
+            for (n <- indices) {
+              sum += deltas(n)(o)
+            }
+
+            sum
+          }
         }
+
+        val w0 = par.execute(w0Tasks).sum
 
         NeuronGrads(w, w0)
       }
@@ -171,7 +179,7 @@ object GradientCalc {
     inputs:  Vec[Vec[Double, In], N],
     nn:      AccGrads[In, Out]
   )(implicit par: Parallel): Double = {
-    val outputs = inputs.map(nn.out)
+    val outputs = inputs.parMap(nn.out)
     val tasks = targets.indices.grouped(par.itemsPerThread).map { indices =>
       () => {
         var sum = 0.0

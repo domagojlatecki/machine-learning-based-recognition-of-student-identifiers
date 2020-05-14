@@ -14,8 +14,7 @@ object Parallel {
     val itemsPerThread: Int = DefaultItemsPerThread
 
     private val tp = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors())
-    private implicit val ec: ExecutionContext =
-      ExecutionContext.fromExecutorService(tp)
+    private implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(tp)
 
     def execute[A](tasks: Iterator[() => A]): List[A] = {
       tasks.map(f => Future(f()))
