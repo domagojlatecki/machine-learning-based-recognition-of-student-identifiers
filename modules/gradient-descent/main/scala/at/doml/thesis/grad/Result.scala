@@ -12,5 +12,7 @@ object Result {
 
   final case class TargetError[In <: Int, Out <: Int](nn: NeuralNetwork[In, Out]) extends Result[In, Out]
 
+  final case class Fitted[In <: Int, Out <: Int](nn: NeuralNetwork[In, Out]) extends Result[In, Out]
+
   final case class NoTrainingData[In <: Int, Out <: Int](nn: NeuralNetwork[In, Out]) extends Result[In, Out]
 }

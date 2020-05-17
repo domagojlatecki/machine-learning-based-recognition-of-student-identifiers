@@ -200,26 +200,29 @@ object GradientCalc {
     par.execute(tasks).sum / (2.0 * targets.length)
   }
 
-  def optimize[In <: Int, Out <: Int, N <: Int](
+  def optimize[In <: Int, Out <: Int, N1 <: Int, N2 <: Int](
     nn: NeuralNetwork[In, Out]
   )(
-    samples:     Vec[Sample[In, Out], N],
-    step:        Double,
-    inertia:     Double,
-    batchSize:   BatchSize,
-    maxIters:    Int,
-    targetError: Double
+    trainSamples:                 Vec[Sample[In, Out], N1],
+    testSamples:                  Option[Vec[Sample[In, Out], N2]],
+    testSamplesMovingAverageSize: Option[Int],
+    step:                         Double,
+    inertia:                      Double,
+    batchSize:                    BatchSize,
+    maxIters:                     Int,
+    targetError:                  Double
   )(implicit par: Parallel): Result[In, Out] = {
-    val inputs = samples.map(_.input)
-    val targets = samples.map(_.target)
+    val trainInputs = trainSamples.map(_.input)
+    val trainTargets = trainSamples.map(_.target)
+    val testInputsAndTargets = testSamples.map(s =>(s.map(_.input), s.map(_.target)))
 
     val numOfBatchSamples = batchSize match {
       case BatchSize.of(v) => v
-      case BatchSize.all   => samples.length
+      case BatchSize.all   => trainSamples.length
     }
 
-    val inputBatches = inputs.underlying.grouped(numOfBatchSamples).toList
-    val targetBatches = targets.underlying.grouped(numOfBatchSamples).toList
+    val inputBatches = trainInputs.underlying.grouped(numOfBatchSamples).toList
+    val targetBatches = trainTargets.underlying.grouped(numOfBatchSamples).toList
 
     type Batch = (ArraySeq[Vec[Double, In]], ArraySeq[Vec[Double, Out]])
     val batches: List[Batch] = inputBatches.zip(targetBatches)
@@ -239,9 +242,24 @@ object GradientCalc {
       }
     }
 
+    def errorColor(previous: Double, next: Double): String = {
+      if (previous > next) {
+        "\u001B[32m"
+      } else if (previous < next) {
+        "\u001B[31m"
+      } else {
+        "\u001B[33m"
+      }
+    }
+
     @tailrec
-    def loop(n: AccGrads[In, Out], iter: Int, err: Double): Result[In, Out] = {
-      if (err <= targetError) {
+    def loop(
+      n:              AccGrads[In, Out],
+      iter:           Int,
+      trainErr:       Double,
+      testErrHistory: Option[List[Double]]
+    ): Result[In, Out] = {
+      if (trainErr <= targetError) {
         Result.TargetError(AccGrads.unwrap(n))
       } else if (iter > maxIters) {
         Result.MaxIterations(AccGrads.unwrap(n))
@@ -250,20 +268,49 @@ object GradientCalc {
           case Nil    => NoTrainingData(AccGrads.unwrap(n))
           case h :: t =>
             val next = batchLoop(n, h, t)
-            val error = calcError(targets, inputs, next)
-            val color = if (err > error) "\u001B[32m" else if (err < error) "\u001B[31m" else "\u001B[33m"
+            val trainError = calcError(trainTargets, trainInputs, next)
+            val testError = testInputsAndTargets.map { case (inputs, targets) => calcError(targets, inputs, next) }
+            val previousTestErrAverage = testErrHistory.map(ds => ds.sum / ds.length)
+            val nextTestErrHistory: Option[List[Double]] = testErrHistory.flatMap { l =>
+              testSamplesMovingAverageSize match {
+                case None    => testError.map(_ :: Nil)
+                case Some(s) =>
+                  if (l.size >= s) {
+                    testError.map(_ :: l.init)
+                  } else {
+                    testError.map(_ :: l)
+                  }
+              }
+            }
+            val nextTestErrAverage = nextTestErrHistory.map(ds => ds.sum / ds.length)
+            val testAverageErrorString = previousTestErrAverage.zip(nextTestErrAverage).map { case (previous, next) =>
+              s"; ${errorColor(previous, next)}moving average test error: $next\u001B[0m"
+            }.getOrElse("")
+            val testErrorString = testErrHistory.map(_.head).zip(testError).map { case (previous, next) =>
+              s"; ${errorColor(previous, next)}test error: $next\u001B[0m"
+            }.getOrElse("")
 
-            println(s"${color}Iteration $iter error: $error\u001B[0m")
+            println(
+              s"${errorColor(trainErr, trainError)}Iteration $iter error: $trainError\u001B[0m" +
+              s"$testErrorString$testAverageErrorString"
+            )
 
-            loop(next, iter + 1, error)
+            if (previousTestErrAverage.zip(nextTestErrAverage).exists { case (previous, next) => next > previous }) {
+              Result.Fitted(AccGrads.unwrap(n))
+            } else {
+              loop(next, iter + 1, trainError, nextTestErrHistory)
+            }
         }
       }
     }
 
     val acc = AccGrads.wrap(nn) // TODO initialize to iteration 1 gradients
-    val error = calcError(targets, inputs, acc)
-    println(s"Initial error: $error")
+    val trainError = calcError(trainTargets, trainInputs, acc)
+    val testError = testInputsAndTargets.map { case (inputs, targets) => calcError(targets, inputs, acc) }
+    val testErrorString = testError.map(v => s"; test error: $v").getOrElse("")
 
-    loop(acc, 1, error)
+    println(s"Initial error: $trainError$testErrorString")
+
+    loop(acc, 1, trainError, testError.map(_ :: Nil))
   }
 }

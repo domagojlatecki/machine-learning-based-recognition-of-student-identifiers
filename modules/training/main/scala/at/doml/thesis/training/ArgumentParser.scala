@@ -88,6 +88,21 @@ object ArgumentParser {
       case object TargetError     extends Arg("--target-error", "Target error, default value: 10e-7", "double")
       case object RawSamples      extends Arg("--images", "Root of image dataset, exclusive with --features", "dir")
       case object PrepSamples     extends Arg("--features", "Root of features dataset, exclusive with --images", "dir")
+      case object RawTestSamples  extends Arg(
+        "--test-images",
+        "Root of test image dataset, exclusive with --test-features, optional",
+        "dir"
+      )
+      case object PrepTestSamples extends Arg(
+        "--test-features",
+        "Root of test features dataset, exclusive with --test-images, optional",
+        "dir"
+      )
+      case object TestMovingAverageSize extends Arg(
+        "--test-moving-average",
+        "Size of test set moving average for error, default value: 1",
+        "int"
+      )
       case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
       case object OutputPath      extends Arg("--output", "Output file for neural network", "file")
       case object LoadNetwork     extends Arg("--load", "Load neural network file, exclusive with --layout", "file")
@@ -100,16 +115,18 @@ object ArgumentParser {
     }
 
     final case class ArgsBuilder(
-      samplesPath:           Option[SamplesPath]   = None,
-      debugRoot:             Option[Path]          = None,
-      outputFile:            Option[Path]          = None,
-      neuralNetworkProvider: NeuralNetworkProvider = CreateFromLayout(List(10 ,10)),
-      numbersPerImage:       Int                   = 10,
-      step:                  Double                = 1.0,
-      inertia:               Double                = 0.0,
-      batchSize:             BatchSize             = BatchSize.all,
-      maxIters:              Int                   = 10_000,
-      targetError:           Double                = 10e-7
+      trainSamplesPath:             Option[SamplesPath]   = None,
+      testSamplesPath:              Option[SamplesPath]   = None,
+      testSamplesMovingAverageSize: Option[Int]           = None,
+      debugRoot:                    Option[Path]          = None,
+      outputFile:                   Option[Path]          = None,
+      neuralNetworkProvider:        NeuralNetworkProvider = CreateFromLayout(List(10 ,10)),
+      numbersPerImage:              Int                   = 10,
+      step:                         Double                = 1.0,
+      inertia:                      Double                = 0.0,
+      batchSize:                    BatchSize             = BatchSize.all,
+      maxIters:                     Int                   = 10_000,
+      targetError:                  Double                = 10e-7
     )
 
     type S = State
@@ -126,6 +143,9 @@ object ArgumentParser {
       State.TargetError,
       State.RawSamples,
       State.PrepSamples,
+      State.RawTestSamples,
+      State.PrepTestSamples,
+      State.TestMovingAverageSize,
       State.NumbersPerImage,
       State.OutputPath,
       State.LoadNetwork,
@@ -189,7 +209,7 @@ object ArgumentParser {
           val path = Paths.get(arg)
 
           if (path.toFile.isDirectory) {
-            Right((State.Init, acc.copy(samplesPath = Some(RawSamples(path, 0)))))
+            Right((State.Init, acc.copy(trainSamplesPath = Some(RawSamples(path, 0)))))
           } else {
             Left(IllegalArgumentError(arg))
           }
@@ -198,9 +218,34 @@ object ArgumentParser {
           val path = Paths.get(arg)
 
           if (path.toFile.isDirectory) {
-            Right((State.Init, acc.copy(samplesPath = Some(PreprocessedSamples(path)))))
+            Right((State.Init, acc.copy(trainSamplesPath = Some(PreprocessedSamples(path)))))
           } else {
             Left(IllegalArgumentError(arg))
+          }
+
+        case State.RawTestSamples =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isDirectory) {
+            Right((State.Init, acc.copy(testSamplesPath = Some(RawSamples(path, 0)))))
+          } else {
+            Left(IllegalArgumentError(arg))
+          }
+
+        case State.PrepTestSamples =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isDirectory) {
+            Right((State.Init, acc.copy(testSamplesPath = Some(PreprocessedSamples(path)))))
+          } else {
+            Left(IllegalArgumentError(arg))
+          }
+
+        case State.TestMovingAverageSize =>
+          arg.toIntOption match {
+            case Some(v) if v >= 0 => Right((State.Init, acc.copy(testSamplesMovingAverageSize = Some(v))))
+            case Some(_)           => Left(IllegalArgumentError(arg))
+            case None              => Left(NumberParseError(arg))
           }
 
         case State.NumbersPerImage =>
@@ -256,24 +301,26 @@ object ArgumentParser {
 
     def buildArgs(acc: ArgsBuilder): ![Command.Train] = {
 
-      (acc.samplesPath, acc.outputFile) match {
-        case (Some(samplesPath), Some(outputFile)) =>
-          val sp = samplesPath match {
+      (acc.trainSamplesPath, acc.outputFile) match {
+        case (Some(trainSamplesPath), Some(outputFile)) =>
+          val sp = trainSamplesPath match {
             case RawSamples(p, _) => RawSamples(p, acc.numbersPerImage)
             case v                => v
           }
 
           Right(
             Command.Train(
-              samplesPath = sp,
-              debugRoot = acc.debugRoot,
-              outputFile = outputFile,
-              neuralNetworkProvider = acc.neuralNetworkProvider,
-              step = acc.step,
-              inertia = acc.inertia,
-              batchSize = acc.batchSize,
-              maxIters = acc.maxIters,
-              targetError = acc.targetError
+              trainSamplesPath             = sp,
+              testSamplesPath              = acc.testSamplesPath,
+              testSamplesMovingAverageSize = acc.testSamplesMovingAverageSize,
+              debugRoot                    = acc.debugRoot,
+              outputFile                   = outputFile,
+              neuralNetworkProvider        = acc.neuralNetworkProvider,
+              step                         = acc.step,
+              inertia                      = acc.inertia,
+              batchSize                    = acc.batchSize,
+              maxIters                     = acc.maxIters,
+              targetError                  = acc.targetError
             )
           )
 
@@ -426,12 +473,12 @@ object ArgumentParser {
 
           Right(
             Command.Test(
-              samplesPath = sp,
-              debugRoot = acc.debugRoot,
+              samplesPath        = sp,
+              debugRoot          = acc.debugRoot,
               neuralNetworkPaths = first :: rest,
-              ensemble = acc.ensemble,
-              detailByNumber = acc.detailByNumber,
-              printMisses = acc.printMisses
+              ensemble           = acc.ensemble,
+              detailByNumber     = acc.detailByNumber,
+              printMisses        = acc.printMisses
             )
           )
 
@@ -540,10 +587,10 @@ object ArgumentParser {
         case (Some(imagesPath), Some(outputFile)) =>
           Right(
             Command.Prepare(
-              imagesPath = imagesPath,
-              debugRoot = acc.debugRoot,
+              imagesPath      = imagesPath,
+              debugRoot       = acc.debugRoot,
               numbersPerImage = acc.numbersPerImage,
-              outputFile = outputFile
+              outputFile      = outputFile
             )
           )
 

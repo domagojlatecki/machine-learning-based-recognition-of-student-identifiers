@@ -21,15 +21,17 @@ object Command {
   final case class CreateFromLayout(layout: List[Int]) extends NeuralNetworkProvider
 
   final case class Train(
-    samplesPath:           SamplesPath,
-    debugRoot:             Option[Path],
-    outputFile:            Path,
-    neuralNetworkProvider: NeuralNetworkProvider,
-    step:                  Double,
-    inertia:               Double,
-    batchSize:             BatchSize,
-    maxIters:              Int,
-    targetError:           Double
+    trainSamplesPath:             SamplesPath,
+    testSamplesPath:              Option[SamplesPath],
+    testSamplesMovingAverageSize: Option[Int],
+    debugRoot:                    Option[Path],
+    outputFile:                   Path,
+    neuralNetworkProvider:        NeuralNetworkProvider,
+    step:                         Double,
+    inertia:                      Double,
+    batchSize:                    BatchSize,
+    maxIters:                     Int,
+    targetError:                  Double
   ) extends Command
 
   final case class Test(

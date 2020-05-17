@@ -331,24 +331,30 @@ object Main {
       }
     }
 
-    def trainNetwork(nn: NeuralNetwork[In, 10], samples: Vec[Sample[In, 10], Int]): Result[In, 10] = {
+    def trainNetwork(
+      nn:           NeuralNetwork[In, 10],
+      trainSamples: Vec[Sample[In, 10], Int],
+      testSamples:  Option[Vec[Sample[In, 10], Int]]
+    ): Result[In, 10] = {
       val batchSize = args.batchSize match {
         case BatchSize.of(v) => v
-        case BatchSize.all   => samples.length
+        case BatchSize.all   => trainSamples.length
       }
-      val par =
-        if (batchSize <= Parallel.DefaultItemsPerThread || samples.length <= Parallel.DefaultItemsPerThread) {
+      val par = // TODO threading for test samples
+        if (batchSize <= Parallel.DefaultItemsPerThread || trainSamples.length <= Parallel.DefaultItemsPerThread) {
           Parallel.SingleThread
         } else {
           new Parallel.NumProcessors()
         }
       val result = GradientCalc.optimize(nn)(
-        samples     = samples,
-        step        = args.step,
-        inertia     = args.inertia,
-        batchSize   = args.batchSize,
-        maxIters    = args.maxIters,
-        targetError = args.targetError
+        trainSamples                 = trainSamples,
+        testSamples                  = testSamples,
+        testSamplesMovingAverageSize = args.testSamplesMovingAverageSize,
+        step                         = args.step,
+        inertia                      = args.inertia,
+        batchSize                    = args.batchSize,
+        maxIters                     = args.maxIters,
+        targetError                  = args.targetError
       )(par)
 
       par.shutdown()
@@ -360,6 +366,7 @@ object Main {
         case Result.NoTrainingData(_) => println("No training data provided.")
         case Result.TargetError(_)    => println("Target error reached.")
         case Result.MaxIterations(_)  => println("Maximum number of iterations reached.")
+        case Result.Fitted(_)         => println("Optimal parameters found.")
       }
 
       def serializeNeuron[I <: Int](neuron: Neuron[I]): String = {
@@ -388,21 +395,33 @@ object Main {
 
     val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
     for {
-      data    <- args.samplesPath match {
+      trainData    <- args.trainSamplesPath match {
 
-                   case RawSamples(path, numbersPerImage) =>
-                     loadRawSamples(path, numbersPerImage, requireLabels = true, debugger)
+                        case RawSamples(path, numbersPerImage) =>
+                          loadRawSamples(path, numbersPerImage, requireLabels = true, debugger)
 
-                   case PreprocessedSamples(path)         =>
-                     loadPreprocessedSamples(path, requireLabels = true)
-                 }
-      nn      <- args.neuralNetworkProvider match {
-                   case LoadFromFile(path)       => loadNeuralNetwork(path)
-                   case CreateFromLayout(layout) => Right(NeuralNetwork.random(In, layout, 10, (-0.4, 0.4)))
-                 }
-      samples  = convertToSamples(data)
-      result   = trainNetwork(nn, samples)
-      _       <- writeResult(result)
+                        case PreprocessedSamples(path) =>
+                          loadPreprocessedSamples(path, requireLabels = true)
+                      }
+      testData     <- args.testSamplesPath match {
+
+                        case Some(RawSamples(path, numbersPerImage)) =>
+                          loadRawSamples(path, numbersPerImage, requireLabels = true, debugger).map(Some.apply)
+
+                        case Some(PreprocessedSamples(path)) =>
+                          loadPreprocessedSamples(path, requireLabels = true).map(Some.apply)
+
+                        case None =>
+                          Right(None)
+                      }
+      nn           <- args.neuralNetworkProvider match {
+                        case LoadFromFile(path)       => loadNeuralNetwork(path)
+                        case CreateFromLayout(layout) => Right(NeuralNetwork.random(In, layout, 10, (-0.4, 0.4)))
+                      }
+      trainSamples  = convertToSamples(trainData)
+      testSamples   = testData.map(convertToSamples)
+      result        = trainNetwork(nn, trainSamples, testSamples)
+      _            <- writeResult(result)
     } yield ()
   }
 
