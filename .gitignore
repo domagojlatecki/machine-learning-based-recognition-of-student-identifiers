@@ -9,6 +9,16 @@ data/
 # Output files
 out/
 
+# LaTeX output files
+text/*.pdf
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.synctex.gz
+
 # OS X
 .DS_Store
 .localized
