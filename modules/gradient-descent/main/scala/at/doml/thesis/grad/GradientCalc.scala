@@ -200,6 +200,76 @@ object GradientCalc {
     par.execute(tasks).sum / (2.0 * targets.length)
   }
 
+  private def errorColor(previous: Double, next: Double): String = {
+    if (previous > next) {
+      "\u001B[32m"
+    } else if (previous < next) {
+      "\u001B[31m"
+    } else {
+      "\u001B[33m"
+    }
+  }
+
+  private sealed trait TestValidation[In <: Int, Out <: Int] extends Product with Serializable {
+    def updateCurrentError(acc: AccGrads[In, Out])(implicit par: Parallel): TestValidation[In, Out]
+    def testErrorString: String
+  }
+
+  private final case class TestErrorData[In <: Int, Out <: Int, N <: Int](
+    currentError:          Double,
+    bestError:             Double,
+    bestAcc:               AccGrads[In, Out],
+    history:               List[Double],
+    previousMovingAverage: Double,
+    movingAverageSize:     Int,
+    testInputs:            Vec[Vec[Double, In], N],
+    testTargets:           Vec[Vec[Double, Out], N]
+  ) extends TestValidation[In, Out] {
+
+    def updateCurrentError(acc: AccGrads[In, Out])(implicit par: Parallel): TestValidation[In, Out] = {
+      val error = calcError(testTargets, testInputs, acc)
+      val hSize = history.size
+      val prevAvg = history match {
+        case Nil => error
+        case h   => h.sum / hSize
+      }
+      val newHistory = if (hSize >= movingAverageSize) {
+        error :: history.init
+      } else {
+        error :: history
+      }
+
+      copy(
+        currentError          = error,
+        bestError             = error min bestError,
+        bestAcc               = if (error <= bestError) acc else bestAcc,
+        history               = newHistory,
+        previousMovingAverage = prevAvg
+      )
+    }
+
+    def testErrorString: String = {
+      history match {
+        case Nil                   => ""
+        case err :: Nil            => s"; test error: $err"
+        case next :: previous :: _ =>
+          val movingAverageString = if (movingAverageSize > 1) {
+            val nextAvg = history.sum / history.size
+            s"; ${errorColor(previousMovingAverage, nextAvg)}moving average test error: $nextAvg\u001B[0m"
+          } else {
+            ""
+          }
+
+          s"$movingAverageString; ${errorColor(previous, next)}test error: $next\u001B[0m"
+      }
+    }
+  }
+
+  private final case class NoTestData[In <: Int, Out <: Int]() extends TestValidation[In, Out] {
+    def updateCurrentError(acc: AccGrads[In, Out])(implicit par: Parallel): TestValidation[In, Out] = this
+    def testErrorString: String = ""
+  }
+
   def optimize[In <: Int, Out <: Int, N1 <: Int, N2 <: Int](
     nn: NeuralNetwork[In, Out]
   )(
@@ -214,7 +284,6 @@ object GradientCalc {
   )(implicit par: Parallel): Result[In, Out] = {
     val trainInputs = trainSamples.map(_.input)
     val trainTargets = trainSamples.map(_.target)
-    val testInputsAndTargets = testSamples.map(s =>(s.map(_.input), s.map(_.target)))
 
     val numOfBatchSamples = batchSize match {
       case BatchSize.of(v) => v
@@ -242,22 +311,12 @@ object GradientCalc {
       }
     }
 
-    def errorColor(previous: Double, next: Double): String = {
-      if (previous > next) {
-        "\u001B[32m"
-      } else if (previous < next) {
-        "\u001B[31m"
-      } else {
-        "\u001B[33m"
-      }
-    }
-
     @tailrec
     def loop(
       n:              AccGrads[In, Out],
       iter:           Int,
       trainErr:       Double,
-      testErrHistory: Option[List[Double]]
+      testValidation: TestValidation[In, Out]
     ): Result[In, Out] = {
       if (trainErr <= targetError) {
         Result.TargetError(AccGrads.unwrap(n))
@@ -269,36 +328,26 @@ object GradientCalc {
           case h :: t =>
             val next = batchLoop(n, h, t)
             val trainError = calcError(trainTargets, trainInputs, next)
-            val testError = testInputsAndTargets.map { case (inputs, targets) => calcError(targets, inputs, next) }
-            val previousTestErrAverage = testErrHistory.map(ds => ds.sum / ds.length)
-            val nextTestErrHistory: Option[List[Double]] = testErrHistory.flatMap { l =>
-              testSamplesMovingAverageSize match {
-                case None    => testError.map(_ :: Nil)
-                case Some(s) =>
-                  if (l.size >= s) {
-                    testError.map(_ :: l.init)
-                  } else {
-                    testError.map(_ :: l)
-                  }
-              }
-            }
-            val nextTestErrAverage = nextTestErrHistory.map(ds => ds.sum / ds.length)
-            val testAverageErrorString = previousTestErrAverage.zip(nextTestErrAverage).map { case (previous, next) =>
-              s"; ${errorColor(previous, next)}moving average test error: $next\u001B[0m"
-            }.getOrElse("")
-            val testErrorString = testErrHistory.map(_.head).zip(testError).map { case (previous, next) =>
-              s"; ${errorColor(previous, next)}test error: $next\u001B[0m"
-            }.getOrElse("")
+            val nextTestValidation = testValidation.updateCurrentError(next)
 
             println(
               s"${errorColor(trainErr, trainError)}Iteration $iter error: $trainError\u001B[0m" +
-              s"$testErrorString$testAverageErrorString"
+              s"${nextTestValidation.testErrorString}"
             )
 
-            if (previousTestErrAverage.zip(nextTestErrAverage).exists { case (previous, next) => next > previous }) {
-              Result.Fitted(AccGrads.unwrap(n))
-            } else {
-              loop(next, iter + 1, trainError, nextTestErrHistory)
+            nextTestValidation match {
+
+              case NoTestData() =>
+                loop(next, iter + 1, trainError, nextTestValidation)
+
+              case TestErrorData(_, _, bestAcc, history, previousMovingAverage, _, _, _) =>
+                val nextMovingAverage = history.sum / history.size
+
+                if (nextMovingAverage > previousMovingAverage) {
+                  Result.Fitted(AccGrads.unwrap(bestAcc))
+                } else {
+                  loop(next, iter + 1, trainError, nextTestValidation)
+                }
             }
         }
       }
@@ -306,11 +355,23 @@ object GradientCalc {
 
     val acc = AccGrads.wrap(nn) // TODO initialize to iteration 1 gradients
     val trainError = calcError(trainTargets, trainInputs, acc)
-    val testError = testInputsAndTargets.map { case (inputs, targets) => calcError(targets, inputs, acc) }
-    val testErrorString = testError.map(v => s"; test error: $v").getOrElse("")
+    val testValidation: TestValidation[In, Out] = testSamples match {
+      case None    => NoTestData()
+      case Some(s) =>
+        TestErrorData(
+          currentError          = 0.0,
+          bestError             = Double.PositiveInfinity,
+          bestAcc               = acc,
+          history               = Nil,
+          previousMovingAverage = 0.0,
+          movingAverageSize     = testSamplesMovingAverageSize.getOrElse(1),
+          testInputs            = s.map(_.input),
+          testTargets           = s.map(_.target)
+        ).updateCurrentError(acc)
+    }
 
-    println(s"Initial error: $trainError$testErrorString")
+    println(s"Initial error: $trainError${testValidation.testErrorString}")
 
-    loop(acc, 1, trainError, testError.map(_ :: Nil))
+    loop(acc, 1, trainError, testValidation)
   }
 }
