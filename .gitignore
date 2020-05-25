@@ -15,6 +15,7 @@ text/*.pdf
 *.bbl
 *.blg
 *.log
+*.lof
 *.out
 *.toc
 *.synctex.gz
