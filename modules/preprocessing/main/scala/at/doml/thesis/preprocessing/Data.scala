@@ -1,6 +1,6 @@
 package at.doml.thesis.preprocessing
 
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 
 sealed trait Data extends Product with Serializable {
 

@@ -3,7 +3,7 @@ package at.doml.thesis.preprocessing.transform
 import at.doml.thesis.preprocessing.Data
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.image.{Canvas, Color}
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 import scala.collection.immutable.ArraySeq
 
 object FeaturesTransform {

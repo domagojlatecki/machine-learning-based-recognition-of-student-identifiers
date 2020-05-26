@@ -1,5 +1,6 @@
-package at.doml.thesis.util
+package at.doml.thesis.util.collection.sized
 
+import at.doml.thesis.util.par.Parallel
 import scala.collection.immutable.ArraySeq
 import scala.reflect.ClassTag
 
@@ -72,10 +73,6 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
 
   def maxBy[B](f: A => B)(implicit cmp: Ordering[B]): A =
     underlying.maxBy(f)
-
-  @deprecated
-  def unsafeMapWithIndex[B : ClassTag](f: (A, Int) => B): Vec[B, S] =
-    new Vec(ArraySeq.tabulate(length)(i => f(underlying(i), i)))
 }
 
 object Vec {
@@ -87,10 +84,4 @@ object Vec {
   def fill[A : ClassTag](n: Int)(elem: => A): Vec[A, n.type] = new Vec(ArraySeq.fill(n)(elem))
 
   def tabulate[A : ClassTag](n: Int)(f: Int => A): Vec[A, n.type] = new Vec(ArraySeq.tabulate(n)(f))
-
-  @deprecated
-  def unsafeFromIterable[A : ClassTag, S <: Int](i: Iterable[A]): Vec[A, S] = new Vec(i.to(ArraySeq))
-
-  @deprecated
-  def iterate[A : ClassTag](start: A, len: Int)(f: A => A): Vec[A, len.type] = new Vec(ArraySeq.iterate(start, len)(f))
 }

@@ -1,6 +1,6 @@
 package at.doml.thesis.nn
 
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 
 final case class Neuron[In <: Int](w: Vec[Double, In], w0: Double) {
 

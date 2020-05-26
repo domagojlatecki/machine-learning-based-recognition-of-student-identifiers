@@ -1,4 +1,4 @@
-package at.doml.thesis.util
+package at.doml.thesis.util.collection.sized
 
 final class Idx[A <: Int] private (val v: Int) extends AnyVal
 

@@ -2,7 +2,7 @@ package at.doml.thesis.preprocessing.transform
 
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.image.{Canvas, Color, Pixel}
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable.ArrayBuffer

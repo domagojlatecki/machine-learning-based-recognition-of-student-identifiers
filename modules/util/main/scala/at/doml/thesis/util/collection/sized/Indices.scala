@@ -1,4 +1,4 @@
-package at.doml.thesis.util
+package at.doml.thesis.util.collection.sized
 
 import scala.collection.immutable.ArraySeq
 import scala.reflect.ClassTag

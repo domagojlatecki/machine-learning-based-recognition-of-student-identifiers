@@ -11,7 +11,7 @@ import at.doml.thesis.preprocessing.{Data, Preprocessor}
 import at.doml.thesis.preprocessing.image.{Canvas, Color}
 import at.doml.thesis.training.Command.{CreateFromLayout, LoadFromFile, PreprocessedSamples, RawSamples}
 import at.doml.thesis.training.Error.!
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 import javax.imageio.ImageIO
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.{ListHasAsScala, SeqHasAsJava}

@@ -1,7 +1,7 @@
 package at.doml.thesis.nn
 
 import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 import scala.annotation.tailrec
 
 sealed trait NeuralNetwork[In <: Int, Out <: Int] extends Product with Serializable {

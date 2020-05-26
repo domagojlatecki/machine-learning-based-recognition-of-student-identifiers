@@ -1,4 +1,4 @@
-package at.doml.thesis.util
+package at.doml.thesis.util.par
 
 trait Parallel {
 

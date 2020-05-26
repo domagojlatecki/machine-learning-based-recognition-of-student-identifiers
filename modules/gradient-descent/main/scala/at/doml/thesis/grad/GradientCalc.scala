@@ -5,7 +5,8 @@ import at.doml.thesis.grad.internal.{AccGrads, LayerData, LayerGrads, NeuralNetw
 import at.doml.thesis.grad.internal.AccGrads.{ForwardPass, LastLayer}
 import at.doml.thesis.grad.internal.NeuralNetworkData.{BackwardPassData, FirstLayerData}
 import at.doml.thesis.nn.{Layer, NeuralNetwork, Neuron}
-import at.doml.thesis.util.{Parallel, Vec}
+import at.doml.thesis.util.collection.sized.Vec
+import at.doml.thesis.util.par.Parallel
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 

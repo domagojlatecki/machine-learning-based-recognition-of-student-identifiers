@@ -3,7 +3,7 @@ package at.doml.thesis.grad.internal
 import at.doml.thesis.grad.internal.AccGrads.{ForwardPass, LastLayer}
 import at.doml.thesis.grad.internal.NeuralNetworkData.{BackwardPassData, FirstLayerData}
 import at.doml.thesis.nn.{Layer, NeuralNetwork}
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 import scala.annotation.tailrec
 
 private[grad] sealed trait AccGrads[In <: Int, Out <: Int] extends Product with Serializable {

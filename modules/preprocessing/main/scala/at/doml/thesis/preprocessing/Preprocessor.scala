@@ -3,7 +3,7 @@ package at.doml.thesis.preprocessing
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.image.Canvas
 import at.doml.thesis.preprocessing.transform._
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 import scala.collection.immutable.ArraySeq
 
 object Preprocessor {

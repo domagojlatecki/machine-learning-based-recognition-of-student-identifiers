@@ -1,7 +1,7 @@
 package at.doml.thesis.training
 
 import java.util.concurrent.Executors
-import at.doml.thesis.util.Parallel
+import at.doml.thesis.util.par.Parallel
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 

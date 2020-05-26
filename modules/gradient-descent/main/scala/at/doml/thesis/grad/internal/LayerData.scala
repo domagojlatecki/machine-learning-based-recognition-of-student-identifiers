@@ -1,7 +1,7 @@
 package at.doml.thesis.grad.internal
 
 import at.doml.thesis.nn.Neuron
-import at.doml.thesis.util.Vec
+import at.doml.thesis.util.collection.sized.Vec
 
 private[grad] final case class LayerData[In <: Int, Out <: Int, N <: Int](
   neurons:       Vec[Neuron[In], Out],
