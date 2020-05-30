@@ -51,7 +51,7 @@ teksta.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/character-recognition-categories.pdf}
-    \caption{Podjela područja raspoznavanja teksta}
+    \caption{Podjela područja raspoznavanja teksta.}
     \label{fig:podjela-podrucja-raspoznavanja-teksta}
 \end{figure}
 
@@ -127,7 +127,7 @@ ujednačavanje. Time je postignuta otpornost mreže na translacije i ulazne smet
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/atypical-data.png}
-    \caption{Atipično stilizirane znamenke}
+    \caption{Atipično stilizirane znamenke.}
     \label{fig:atipicno-stilizirane-znamenke}
 \end{figure}
 Segmentacija slika je obavljena ručno te rad ne razmatra postupak segmentacije. Korišteni skup podataka sastoji se od
@@ -140,7 +140,6 @@ slici\footnote{Slika je preuzeta iz\ \citep{leCun1990}.}\ \ref{fig:atipicno-stil
 
 \subsection{Raspoznavanje rukom pisanih znakova koristeći lokalne gradijente opisnika značajki}
 \label{subsec:raspoznavanje-rukom-pisanih-znakova-koristeci-lokalne-gradijente-opisnika-znacajki}
-% TODO up is done
 Metoda lokalnih gradijenata kao odabranih značajki znakova pokazuje bolje rezultate nego metode koje direktno koriste
 intenzitete piksela kao ulaze kao što je pokazano u\ \citep{surinta2015}. Navedeni rad analizirao je raspoznavanje
 znakova i brojeva koristeći metodu lokalnih gradijenata na tri različita pisma: Latiničnom, Tajlandskom i Bengalskom.
@@ -189,4 +188,29 @@ klasifikacije algoritmom $k$-najbližih susjeda metoda \emph{SIFT} pokazuje znat
 Bengalskom skupu znakova, dok metoda \emph{HOG} dalje bolje rezultate za Latinične znakove. Međutim, klasifikacija
 strojem potpornih vektora daje najbolje rezultate za sva tri pisma koristeći metodu \emph{SIFT}.
 
-% TODO
+\subsection{Segmentacija i raspoznavanje teksta na kompleksnoj pozadini temeljeno na Markovljevom nasumičnom polju}
+\label{subsec:segmentacija-i-raspoznavanje-teksta-na-kompleksnoj-pozadini-temeljeno-na-markovljevom-nasumicnom-polju}
+Većina metoda za raspoznavanje teksta koristi pretpostavku da je raspodjela sivih nijansi ulazne slike bimodalna te da
+su znakovi isključivo crni ili bijeli dijelovi te razdiobe. Postupak opisan u\ \citep{chen2002} razmatra raspoznavanje
+znakova na kompleksnoj pozadini gdje je moguće da su sive nijanse znakova jako slične sivim nijansama pozadine. U tom
+slučaju pokazano je da klasifikacija može jako varirati ovisno o kvaliteti segmentacije ulazne slike pošto se greške
+segmentacije direktno prenose u postupak klasifikacije. Navedeni postupak stoga generira određeni broj hipoteza o
+segmentaciji slike kod kojih se zatim provodi analiza povezanih komponenti. Svaka hipoteza šalje se dalje u klasifikator
+koji dalje vjerojatnosnu vrijednost klasifikacije te se odabire najvjerojatniji rezultat. Kod postupka segmentacije
+intenziteti ulaznih piksela modeliraju se kao kombinacija $K$ nasumičnih procesa. Svaki nasumični proces može se
+smatrati jednim slojem ulazne slike koji sadrži slične vrijednosti intenziteta, te će jedan od njih sadržavati ulazne
+znakove. Rad je testirao dva algoritma za proces segmentacije: \emph{EM}\footnote{Algoritam maksimizacije očekivanja,
+    \emph{engl. Expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
+očekivanja.}. Kod \emph{EM} algoritma, kombinacija svih nasumičnih procesa definira se na sljedeći način:\\
+\\
+$p(o_s) = \sum_{k = 1}^{K} p(o_s | e_s = k) p(e_s = k) = \sum_{k = 1}^{K} \pi_k p_k(o_s)$\\
+\\
+Koristeći normalnu razdiobu $p_i(o_s) = \mathcal{N}(\mu_i, \sigma_i)$, potrebno je pronaći skup parametara
+$(\mu_i, \sigma_i, \pi_i)$ za koji područje oznaka $e = \{e_s, 1 \leq e_s \leq K, s \in S\}$ najbolje opisuje ulazne
+vrijednosti intenziteta piksela. Slika je definirana preko intenziteta piksela $o = \{o_s, s \in S\}$ gdje $o_s$
+označava intenzitet pojedinog piksela dok je $S$ skup svih piksela slike. Algoritam \emph{GEM} poboljšava navedeni
+postupak modeliranjem nasumičnih procesa kao \emph{Markovljevih} nasumičnih polja te se umjesto odabira parametara s
+najvećom vjerojatnošću provodi optimizaciju maksimalne aposteriorne vjerojatnosti.\\
+Nakon pronalaženja optimalnih parametara, nad svakim dobivenim slojem provodi se analiza povezanih komponenti. Svaki
+sloj smatra se jednom binariziranom slikom koja se dalje šalje na postupak klasifikacije. Stoga je izbor vrijednosti
+$K$ također bitan dio kod ovakvog pristupa raspoznavanju\footnote{U radu su korištene vrijednosti $K \in [2, 4]$.}.
