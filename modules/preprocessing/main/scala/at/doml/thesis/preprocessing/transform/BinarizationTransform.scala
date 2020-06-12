@@ -3,7 +3,7 @@ package at.doml.thesis.preprocessing.transform
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.image.{Canvas, Color}
 
-object ContrastTransform {
+object BinarizationTransform {
 
   private def intensity(c: Color): Int = c.red + c.green + c.blue
 
@@ -23,7 +23,7 @@ object ContrastTransform {
       }
     }
 
-    debugger(result, "contrast", canvasName)
+    debugger(result, "binarization", canvasName)
     result
   }
 }

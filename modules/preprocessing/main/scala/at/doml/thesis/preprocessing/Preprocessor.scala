@@ -19,15 +19,15 @@ object Preprocessor {
     implicit val debug: CanvasDebugger = debugger
 
     val grayscale = GrayscaleTransform(canvas, canvasName)
-    val contrast = ContrastTransform(grayscale, canvasName)
-    val histogramGroups: Option[Vec[Canvas, n.type]] =
+    val binarized = BinarizationTransform(grayscale, canvasName)
+    val groups: Option[Vec[Canvas, n.type]] =
       if (n <= 1) {
-        Some(Vec.unsafeWrap(ArraySeq(contrast)))
+        Some(Vec.unsafeWrap(ArraySeq(binarized)))
       } else {
-        HistogramGroupingTransform(contrast, canvasName, n)
+        GroupingTransform(binarized, canvasName, n)
       }
 
-    histogramGroups.map { groups =>
+    groups.map { groups =>
       val features = groups
         .mapWithIndex((c, i) => ResizeTransform(c, s"${canvasName}_${i.v}.png"))
         .mapWithIndex((c, i) => FeaturesTransform(c, s"${canvasName}_${i.v}.png"))
