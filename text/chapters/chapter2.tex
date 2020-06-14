@@ -47,14 +47,12 @@ znakova više različitih fontova i raspoznavanje znakova bilo svih fontova\ \ci
 Slika\footnote{Slika je preuzeta i prilagođena iz\ \citep{mantas1986}.}\ \ref{fig:podjela-podrucja-raspoznavanja-teksta}
 prikazuje podjelu područja raspoznavanja teksta na tri glavna dijela te detaljnu podjelu područja optičkog raspoznavanja
 teksta.
-
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/character-recognition-categories.pdf}
     \caption{Podjela područja raspoznavanja teksta.}
     \label{fig:podjela-podrucja-raspoznavanja-teksta}
 \end{figure}
-
 S obzirom na korištene značajke, tehnike raspoznavanja teksta možemo razvrstati u dvije
 kategorije\ \citep{govindan1989}:
 \begin{enumerate}
@@ -145,26 +143,34 @@ intenzitete piksela kao ulaze kao što je pokazano u\ \citep{surinta2015}. Naved
 znakova i brojeva koristeći metodu lokalnih gradijenata na tri različita pisma: Latiničnom, Tajlandskom i Bengalskom.
 Rad opisuje dva pristupa računanju lokalnih gradijenata: prvi pristup koristi histogram orijentiranih gradijenata
 (\emph{HOG}) dok drugi pristup koristi transformaciju značajki koja ne ovisi o veličini (\emph{SIFT}\footnote{
-    \emph{Engl. scale invariant feature transform.}}).\\
+\emph{Engl. scale invariant feature transform.}}).\\
 Kod pristupa \emph{HOG}, ulazne značajke definiraju se kao distribucija intenziteta lokalno orijentiranih gradijenata
 slike koji se računaju za male povezane regije. Za svaki piksel slike računaju se sljedeće vrijednosti:\\
-\\
-$G_x = f(x + 1, y) - f(x - 1, y)$\\
-$G_y = f(x, y + 1) - f(x, y - 1)$\\
+\begin{equation*}
+    G_x = f(x + 1, y) - f(x - 1, y),
+\end{equation*}
+\begin{equation*}
+    G_y = f(x, y + 1) - f(x, y - 1).
+\end{equation*}
 \\
 $G_x$ je horizontalna, a $G_y$ vertikalna komponenta gradijenta u nekom pixelu $(x, y)$. Ulazni raspon za smjer
 gradijenta ograničen je na $[0^{\circ}, 180^{\circ}]$. Magnituda gradijenta $M$ i smjer gradijenta $\alpha$ računaju se
 na sljedeći način:\\
-\\
-$M(x, y) = \sqrt{{G_x}^2 + {G_y}^2}$\\
-$\theta(x, y) = \arctan{\frac{G_y}{G_x}}$\\
+\begin{equation*}
+    M(x, y) = \sqrt{{G_x}^2 + {G_y}^2},
+\end{equation*}
+\begin{equation*}
+    \theta(x, y) = \arctan{\frac{G_y}{G_x}}.
+\end{equation*}
 \\
 Nakon ovog koraka, histogrami se računaju iz vrijednosti usmjerenih gradijenata za blokove određene veličine.
 Kombinacija histograma svih blokova tvori vektor ulaznih značajki. Pokazano je kako performansa ovakvog opisnika ovisi
 o broju blokova u ulaznoj slici, tako da je potrebno pažljivo odabrati veličinu bloka u odnosu na veličinu slike. Prije
-korištenja dobivenog vektora značajki, provodi se njegova normalizacija koristeći L2 normu:\\
-\\
-${V_k}^{'} = \frac{V_k}{\sqrt{{||V_k||}^2 + \epsilon}}$\\
+korištenja dobivenog vektora značajki, provodi se njegova normalizacija koristeći \emph{L2} normu:\\
+\begin{equation*}
+{V_k}
+    ^{'} = \frac{V_k}{\sqrt{{||V_k||}^2 + \epsilon}}.
+\end{equation*}
 \\
 $V_k$ je kombinirani histogram svih blokova, $\epsilon$ je mala konstanta blizu nule, a ${V_k}^{'}$ je normalizirani
 vektor značajki.\\
@@ -172,14 +178,18 @@ Pristup \emph{SIFT} računa $128$-dimenzijski vektor značajki za određene klju
 može varirati ovisno o ulaznoj slici, u radu je odabran određen broj fiksnih ključnih točaka, kao na primjer sredina
 ulazne slike. Metoda \emph{SIFT} prvo računa vrijednost konvolucije koristeći \emph{Gaussovu} jezgru varijabilne
 veličine:\\
-\\
-$L(x, y, \sigma) = G(x, y, \sigma) * I(x, y)$\\
+\begin{equation*}
+    L(x, y, \sigma) = G(x, y, \sigma) * I(x, y).
+\end{equation*}
 \\
 $I(x, y)$ je intenzitet piksela $(x, y)$, a $G(x, y, \sigma)$ je \emph{Gaussova} jezgra. Parametar $\sigma$ odrađuje
 širinu \emph{Gaussove} jezgre. Nakon toga računaju se horizontalne i vertikalne komponente gradijenta:\\
-\\
-$G_x = L(x + 1, y, \sigma) - L(x - 1, y, \sigma)$\\
-$G_x = L(x, y + 1, \sigma) - L(x, y - 1, \sigma)$\\
+\begin{equation*}
+    G_x = L(x + 1, y, \sigma) - L(x - 1, y, \sigma),
+\end{equation*}
+\begin{equation*}
+    G_x = L(x, y + 1, \sigma) - L(x, y - 1, \sigma).
+\end{equation*}
 \\
 Zadnji korak ove metode računa magnitude i smjerove gradijenata na isti način kao i kod metode \emph{HOG}. Kao
 klasifikatori korišteni su algoritam $k$-najbližih susjeda i stroj potpornih vektora. Skup za treniranje sastoji se od
@@ -188,7 +198,8 @@ klasifikacije algoritmom $k$-najbližih susjeda metoda \emph{SIFT} pokazuje znat
 Bengalskom skupu znakova, dok metoda \emph{HOG} dalje bolje rezultate za Latinične znakove. Međutim, klasifikacija
 strojem potpornih vektora daje najbolje rezultate za sva tri pisma koristeći metodu \emph{SIFT}.
 
-\subsection{Segmentacija i raspoznavanje teksta na kompleksnoj pozadini temeljeno na Markovljevom nasumičnom polju}
+\subsection{Segmentacija i raspoznavanje teksta na kompleksnoj pozadini temeljeno na \emph{Markovljevom} nasumičnom
+polju}
 \label{subsec:segmentacija-i-raspoznavanje-teksta-na-kompleksnoj-pozadini-temeljeno-na-markovljevom-nasumicnom-polju}
 Većina metoda za raspoznavanje teksta koristi pretpostavku da je raspodjela sivih nijansi ulazne slike bimodalna te da
 su znakovi isključivo crni ili bijeli dijelovi te razdiobe. Postupak opisan u\ \citep{chen2002} razmatra raspoznavanje
@@ -200,10 +211,11 @@ koji dalje vjerojatnosnu vrijednost klasifikacije te se odabire najvjerojatniji 
 intenziteti ulaznih piksela modeliraju se kao kombinacija $K$ nasumičnih procesa. Svaki nasumični proces može se
 smatrati jednim slojem ulazne slike koji sadrži slične vrijednosti intenziteta, te će jedan od njih sadržavati ulazne
 znakove. Rad je testirao dva algoritma za proces segmentacije: \emph{EM}\footnote{Algoritam maksimizacije očekivanja,
-    \emph{engl. Expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
+\emph{engl. Expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
 očekivanja.}. Kod \emph{EM} algoritma, kombinacija svih nasumičnih procesa definira se na sljedeći način:\\
-\\
-$p(o_s) = \sum_{k = 1}^{K} p(o_s | e_s = k) p(e_s = k) = \sum_{k = 1}^{K} \pi_k p_k(o_s)$\\
+\begin{equation*}
+    p(o_s) = \sum_{k = 1}^{K} p(o_s | e_s = k) p(e_s = k) = \sum_{k = 1}^{K} \pi_k p_k(o_s).
+\end{equation*}
 \\
 Koristeći normalnu razdiobu $p_i(o_s) = \mathcal{N}(\mu_i, \sigma_i)$, potrebno je pronaći skup parametara
 $(\mu_i, \sigma_i, \pi_i)$ za koji područje oznaka $e = \{e_s, 1 \leq e_s \leq K, s \in S\}$ najbolje opisuje ulazne
