@@ -7,7 +7,7 @@ object GrayscaleTransform {
 
   def apply(canvas: Canvas, canvasName: String)(implicit debugger: CanvasDebugger): Canvas = {
     val result = canvas.map { color =>
-      val v = (Math.pow((color.red + color.green + color.blue) / 768.0, 2.0) * 256.0).toInt
+      val v = (Math.pow((color.red + color.green + color.blue) / 765.0, 2.0) * 255.0).toInt
       Color(color.alpha, v, v, v)
     }
 

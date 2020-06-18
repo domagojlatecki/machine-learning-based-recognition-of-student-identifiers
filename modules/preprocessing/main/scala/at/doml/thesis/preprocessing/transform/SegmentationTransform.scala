@@ -6,7 +6,7 @@ import at.doml.thesis.util.collection.sized.Vec
 import scala.annotation.tailrec
 import scala.collection.immutable.ArraySeq
 
-object GroupingTransform {
+object SegmentationTransform {
 
   private final case class PixelGroup(pixels: Set[Pixel]) {
 
@@ -39,18 +39,35 @@ object GroupingTransform {
     }
   }
 
-  private val Colors: Map[Int, Color] = Map(
-    0 -> Color(255, 255, 0, 0),
-    1 -> Color(255, 255, 0, 127),
-    2 -> Color(255, 255, 0, 255),
-    3 -> Color(255, 127, 0, 255),
-    4 -> Color(255, 0, 0, 255),
-    5 -> Color(255, 0, 127, 255),
-    6 -> Color(255, 0, 255, 255),
-    7 -> Color(255, 0, 255, 127),
-    8 -> Color(255, 0, 255, 0),
-    9 -> Color(255, 65, 65, 65)
-  )
+  private val Color1 = Color(255, 255, 0, 0)
+  private val Color2 = Color(255, 0, 0, 255)
+  private val Color3 = Color(255, 0, 255, 0)
+
+  private def color(i: Int, n: Int): Color = {
+    if (i < 0 || i >= n) {
+      Color.Black
+    } else if (i <= (n - 1) / 2) {
+      val coeff2 = i.toDouble / ((n - 1) / 2)
+      val coeff1 = 1.0 - coeff2
+
+      Color(
+        255,
+        (Color1.red * coeff1 + Color2.red * coeff2).toInt,
+        (Color1.green * coeff1 + Color2.green * coeff2).toInt,
+        (Color1.blue * coeff1 + Color2.blue * coeff2).toInt
+      )
+    } else {
+      val coeff3 = (i.toDouble - (n - 1) / 2) / (n / 2)
+      val coeff2 = 1.0 - coeff3
+
+      Color(
+        255,
+        (Color2.red * coeff2 + Color3.red * coeff3).toInt,
+        (Color2.green * coeff2 + Color3.green * coeff3).toInt,
+        (Color2.blue * coeff2 + Color3.blue * coeff3).toInt
+      )
+    }
+  }
 
   private def splitGroups(groups: List[PixelGroup], n: Int): List[PixelGroup] = {
 
@@ -182,10 +199,10 @@ object GroupingTransform {
           p.color
         } else {
           val groupForPixel = sortedGroups.find(pg => pg._1.pixels.contains(p)).map(_._2).getOrElse(-1)
-          Colors.getOrElse(groupForPixel, Color.Black)
+          color(groupForPixel, n)
         }
       },
-      "grouping",
+      "segmentation",
       canvasName
     )
 

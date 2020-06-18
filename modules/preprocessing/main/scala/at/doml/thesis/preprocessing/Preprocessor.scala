@@ -24,7 +24,7 @@ object Preprocessor {
       if (n <= 1) {
         Some(Vec.unsafeWrap(ArraySeq(binarized)))
       } else {
-        GroupingTransform(binarized, canvasName, n)
+        SegmentationTransform(binarized, canvasName, n)
       }
 
     groups.map { groups =>

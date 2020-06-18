@@ -7,34 +7,18 @@ import scala.collection.immutable.ArraySeq
 
 object ResizeTransform {
 
-  private implicit final class ViewOps[A](view: View[A]) {
-
-    def avgBy(f: A => Int): Int = {
-      val (sum, count) = view.foldLeft((0, 0)){ case ((s, c), a) =>
-        (s + f(a), c + 1)
-      }
-
-      sum / count
-    }
-  }
-
   def apply(canvas: Canvas, canvasName: String)(implicit debugger: CanvasDebugger): Canvas = {
-    val result = if (canvas.width > canvas.height) {
-      val currentCenterY = canvas.getAllPixelsWithColor(Color.Black).avgBy(_.y)
-      val targetCenterY = canvas.height / 2
-      val yDiff = targetCenterY - currentCenterY
-      val topSize = ((canvas.width - canvas.height) / 2 + yDiff) min (canvas.width - canvas.height)
-      val bottomSize = ((canvas.width - canvas.height) - topSize) max 0
+    val normalized = if (canvas.width > canvas.height) {
+      val totalPadding = canvas.width - canvas.height
+      val topPadding = totalPadding / 2
+      val bottomPadding = totalPadding - topPadding
+      val top = ArraySeq.fill(topPadding * canvas.width)(Color.White)
+      val bottom = ArraySeq.fill(bottomPadding * canvas.width)(Color.White)
 
-      val topPadding = ArraySeq.fill(topSize * canvas.width)(Color.White)
-      val bottomPadding = ArraySeq.fill(bottomSize * canvas.width)(Color.White)
-
-      Canvas(topPadding ++ canvas.values ++ bottomPadding, canvas.width, canvas.width)
+      Canvas(top ++ canvas.values ++ bottom, canvas.width, canvas.width)
     } else if (canvas.width < canvas.height) {
-      val currentCenterX = canvas.getAllPixelsWithColor(Color.Black).avgBy(_.x)
-      val targetCenterX = canvas.width / 2
-      val xDiff = targetCenterX - currentCenterX
-      val leftPadding = ((canvas.height - canvas.width) / 2 + xDiff) min (canvas.height - canvas.width)
+      val totalPadding = canvas.height - canvas.width
+      val leftPadding = totalPadding / 2
 
       Canvas.blank(canvas.height, canvas.height).mapPixels { p =>
         if (p.x >= leftPadding && p.x - leftPadding < canvas.width) {
@@ -45,6 +29,16 @@ object ResizeTransform {
       }
     } else {
       canvas
+    }
+
+    val padding = normalized.width / 5
+    val newSize = normalized.width + 2 * padding
+    val result = Canvas.blank(newSize, newSize).mapPixels { p =>
+      if (p.x >= padding && p.x - padding < normalized.width && p.y >= padding && p.y - padding < normalized.height) {
+        normalized.get(p.x - padding, p.y - padding)
+      } else {
+        p.color
+      }
     }
 
     debugger(result, "resize", canvasName)
