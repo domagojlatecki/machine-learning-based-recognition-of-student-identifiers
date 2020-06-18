@@ -13,8 +13,8 @@ biti kompleksniji i skup podataka za učenje mora biti veći. Zbog toga je pože
 jer se skup za učenje efektivno poveća deset puta i sam klasifikator može biti jednostavniji. Posljednja faza
 klasifikacije raspoznaje svaku znamenku pojedinačno. Slijednim spajanjem pojedinačno klasificiranih brojeva dobiva se
 konačno raspoznati \emph{JMBAG}. U sljedećim odjeljcima bit će opisana implementacija navedenih faza raspoznavanja te
-njihovo povezivanje u sustav za raspoznavanje \emph{JMBAG}-ova. Također će biti opisan postupak učenja i treniranja
-unaprijedne neuronske mreže koja je korištena kao klasifikator pojedinačnih znamenaka \emph{JMBAG}-a.
+njihovo povezivanje u sustav za raspoznavanje \emph{JMBAG}-ova. Također će biti opisan način povezivanja navedenih faza
+u konačan program kojim se trenira neuronska mreža te koji omogućuje raspoznavanje brojeva proizvoljnog broja znamenaka.
 
 
 \section{Pretprocesiranje}
@@ -49,7 +49,7 @@ pronaći minimalnu vrijednost intenziteta $I_{\min}$ i maksimalnu vrijednost int
 sve potpuno vidljive piksele\footnote{Piksel se smatra potpuno vidljivim ako je vrijednost njegove neprozirnosti
 jednaka $255$.}. Preko $I_{\min}$ i $I_{\max}$ računa se intenzitet odsijecanja:\\
 \begin{equation*}
-    I_{o} = I_{\max} - I_{\min}.
+    I_{o} = \frac{I_{\max} - I_{\min}}{2}.
 \end{equation*}\\
 Intenzitet odsijecanja $I_{o}$ zatim se koristi kako bi se slika binarizirala na sljedeći način:
 \begin{enumerate}
@@ -76,7 +76,7 @@ korištena je pretpostavka da su brojevi na slici pojedinačno odvojene komponen
 pronalazi sve crne povezane komponente na slici te ih grupira u međusobno disjunktne skupove piksela koje će se u
 daljnjem tekstu nazivati grupama piksela. U idealnom slučaju, svaka znamenka sastojat će se od samo jedne grupe piksela
 koja je odvojena od svih ostalih grupa znamenaka, time ukupno tvoreći 10 grupa piksela. Ovakav slučaj prikazan je na
-slici\ \ref{fig:ideal-segmentation} gdje je svaka grupa piksela obojana različitom bojom.
+slici\ \ref{fig:ideal-segmentation} gdje je svaka grupa piksela obojena različitom bojom.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/ideal-segmentation.png}
@@ -92,67 +92,154 @@ grupa, implementirani algoritam segmentacije podešava skup glavnih grupa na slj
 \begin{enumerate}
     \item Ako je pronađeno 10 glavnih grupa, skup glavnih grupa ne treba podešavati.
     \item Ako je pronađeno 9 glavnih grupa, glavna grupa najveće širine uklanja se iz skupa glavnih grupa te se dijeli
-    na pola po širini. Time se dobivaju dvije nove grupoe piksela koje se dodaju u skup glavnih grupa koji tada sadrži
+    na pola po širini. Time se dobivaju dvije nove grupe piksela koje se dodaju u skup glavnih grupa koji tada sadrži
     ukupno 10 grupa.
     \item Ako je pronađeno 8 glavnih grupa, dvije glavne grupe najveće širine uklanjaju se iz skupa glavnih grupa.
     Zatim se uspoređuje omjer širina najšire i druge najšire uklonjene grupe. Ako je taj omjer veći ili jednak $1.33$,
-    najšira grupa dijeli se na tri jednaka dijela po širini te se tako dobivene grupe zajedno s preostalom grupom dodaju
-    u skup glavnih grupa. S druge strane ako je omjer širina manji od $1.33$, obje uklonjene grupe dijele se na pola po
-    širini te se novonastale grupe dodaju u skup glavnih grupa. U oba slučaja, skup glavnih grupa sadržavat će ukupno 10
-    grupa.
+    najšira grupa dijeli se na tri jednaka dijela po širini te se tako dobivene grupe uz preostalu grupu dodaju u skup
+    glavnih grupa. S druge strane, ako je omjer širina manji od $1.33$ obje uklonjene grupe dijele se na pola po širini
+    te se novonastale grupe dodaju u skup glavnih grupa. U oba slučaja, skup glavnih grupa sadržavat će ukupno 10 grupa.
     \item Ako je pronađeno 7 ili manje glavnih grupa, tada se $10 - n$ najširih grupa dijeli na pola po širini, gdje je
     $n$ broj pronađenih glavnih grupa.
 \end{enumerate}
 Ako nakon prethodnog koraka podešavanja skup glavnih grupa ne sadrži ukupno 10 grupa, algoritam segmentacije označava
 sliku kao neispravnu te se postupak klasifikacije neće provoditi za tu sliku. U suprotnom, algoritam nastavlja s radom.
-Slike\ \ref{fig:segmentation-before-division} i\ \ref{fig:segmentation-after-division} prikazuju navedeni proces
-podešavanja glavnih grupa za slučaj 9 pronađenih glavnih grupa. Slika\ \ref{fig:segmentation-before-division} prikazuje
-stanje prije podešavanja glavnih grupa te je na njoj najšira grupa označena sivom bojom, dok
-slika\ \ref{fig:segmentation-after-division} prikazuje konačnu podjelu glavnih grupa nakon podešavanja.\\
+Slika\ \ref{fig:segmentation-division} prikazuje navedeni proces podešavanja glavnih grupa za slučaj 9 pronađenih glavnih
+grupa. Stanje prije podešavanja glavnih grupa prikazuje najširu grupu označenu sivom bojom, dok su nakon postupka
+podešavanja sve znamenke označene različitim bojama.\\
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/segmentation-before-division.png}
-    \caption{\emph{JMBAG} s dvije povezane znamenke prije podešavanja glavnih grupa piksela.}
-    \label{fig:segmentation-before-division}
-\end{figure}
-\begin{figure}[htb]
-    \centering
     \includegraphics[width=12cm]{images/segmentation-after-division.png}
-    \caption{\emph{JMBAG} s dvije povezane znamenke nakon podešavanja glavnih grupa piksela.}
-    \label{fig:segmentation-after-division}
+    \caption{\emph{JMBAG} s dvije povezane znamenke prije i nakon podešavanja glavnih grupa piksela.}
+    \label{fig:segmentation-division}
 \end{figure}
-Sljedeći korak jest pronaći kojim glavnim grupama teže pojedinačne sporedne grupe. Prvo se za svaku grupu računa
-središte $(x_s, y_s)$:\\
+Sljedeći korak jest pronaći kojim glavnim grupama teže pojedinačne sporedne grupe. Prvo se za svaku glavnu i sporednu
+grupu računa središte $(x_s, y_s)$:\\
 \begin{align*}
     x_s = \frac{\sum_{n = 1}^{N} x_n}{N}\\
     y_s = \frac{\sum_{n = 1}^{N} y_n}{N}
 \end{align*}\\
-gjde je $N$ broj crnih piksela u grupi. Za svako središte glavne grupe $(x_{s_g}, y_{s_g})$ i središte sporedne grupe
+gdje je $N$ broj crnih piksela u grupi. Za svako središte glavne grupe $(x_{s_g}, y_{s_g})$ i središte sporedne grupe
 $(x_{s_s}, y_{s_s})$ računa se njihova međusobna \emph{Euklidska} udaljenost:\\
 \begin{equation*}
     D = \sqrt{(x_{s_g} - x_{s_s})^{2} + (y_{s_g} - y_{s_s})^{2}}
 \end{equation*}\\
-te se svaka sporedna grupa pridjeljuje najbližoj glavnoj grupi. Nakon opisanog posupka postojati će 10 grupa piksela
-na temelju kojih se svaka znamenka izdvaja u zasebnu sliku. Slika\ \ref{fig:unassigned-minor-groups} prikazuje stanje
-prije dodjeljivanja sporednih grupa (označenih crnom bojom) glavnim grupama, dok slika\ \ref{fig:assigned-minor-groups}
-prikazuje stanje nakon dodjeljivanja.
+te se svaka sporedna grupa pridjeljuje najbližoj glavnoj grupi. Nakon opisanog postupka postojat će 10 grupa piksela
+na temelju kojih se svaka znamenka izdvaja u zasebnu sliku. Slika\ \ref{fig:assigned-minor-groups} prikazuje stanje
+prije i nakon dodjeljivanja sporednih grupa (označenih crnom bojom) glavnim grupama.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/unassigned-minor-groups.png}
-    \caption{Glavne i sporedne grupe piksela prije postupka dodjeljivanja.}
-    \label{fig:unassigned-minor-groups}
-\end{figure}
-\begin{figure}[htb]
-    \centering
     \includegraphics[width=12cm]{images/assigned-minor-groups.png}
-    \caption{Glavne i sporedne grupe piksela nakon postupka dodjeljivanja.}
+    \caption{Glavne i sporedne grupe piksela prije i nakon postupka dodjeljivanja.}
     \label{fig:assigned-minor-groups}
 \end{figure}
 
 
 \section{Klasifikacija}
 \label{sec:klasifikacija}
+Postupkom segmentacije binarizirana slika podijeljena je na pojedinačne slike od kojih svaka sadrži jednu znamenku. Kao
+klasifikator korištena je unaprijedna neuronska mreža s fiksnim brojem ulaza i izlaza, pa je stoga potrebno ulazne slike
+svesti na određen broj značajki. Primjer segmentiranih znamenaka prikazan je na slici\ \ref{fig:segmented}. Segmentirane
+slike su različitih dimenzija te njihov omjer visine i širine nije uvijek $1:1$.
+\begin{figure}[htb]
+    \centering
+    \frame{\includegraphics[width=1cm]{images/segmented-1.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-2.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-3.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-4.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-5.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-6.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-7.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-8.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-9.png}}
+    \frame{\includegraphics[width=1cm]{images/segmented-0.png}}
+    \caption{Pojedinačne slike znamenaka nakon segmentiranja.}
+    \label{fig:segmented}
+\end{figure}
+Također se crni pikseli nalaze na samom rubu svake slike. Stoga se segmentirane slike nadopunjavaju na način:
+\begin{enumerate}
+    \item Ako je visina slike veća od njene širine, slici se s lijeve i desne strane dodaju stupci bijelih piksela sve
+    dok širina i visine nisu jednake.
+    \item Ako je visina slike manja od njene širine, slici se s gornje i donje strane dodaju redovi bijelih piksela
+    sve dok širina i visina slike nisu jednake.
+\end{enumerate}
+Nakon nadopunjavanja slika će uvijek imati omjer širine i visine jednak $1:1$, kao što je prikazano na
+slici\ \ref{fig:scaled}.
+\begin{figure}[htb]
+    \centering
+    \frame{\includegraphics[width=1cm]{images/scaled-1.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-2.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-3.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-4.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-5.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-6.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-7.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-8.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-9.png}}
+    \frame{\includegraphics[width=1cm]{images/scaled-0.png}}
+    \caption{Pojedinačne znamenke nakon ujednačavanja visine i širine.}
+    \label{fig:scaled}
+\end{figure}
+Takva slika nadopunjava se još jednom sa svake strane tako da se dodaje obrub bijelih piksela. Obrub će povećati visinu
+i širinu slike sa svake strane za $20\%$, tako de će se ukupna visina i širina slike povećati za $40\%$ što je prikazano
+na slici\ \ref{fig:padding}.
+\begin{figure}[htb]
+    \centering
+    \frame{\includegraphics[width=1cm]{images/padding-1.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-2.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-3.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-4.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-5.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-6.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-7.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-8.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-9.png}}
+    \frame{\includegraphics[width=1cm]{images/padding-0.png}}
+    \caption{Segmentiranje znamenke nakon konačnog postupka nadopunjavanja.}
+    \label{fig:padding}
+\end{figure}
+Dimenzije slika nakon konačnog postupka nadopunjavanja i dalje nisu jednake za sve slike, te se stoga značajke odabiru
+tako da se računaju udaljenosti do prvog crnog piksela počevši od nekog ruba slike. Također se računaju udaljenosti do
+prvog crnog piksela počevši od središta slike. Ove udaljenosti prikazane su na
+slici\ \ref{fig:features-for-single-digit} za jednu znamenku te na slici\ \ref{fig:features-for-multiple-digits} za svih
+10 znamenaka. Na obje slike udaljenosti su označene različitim bojama na sljedeći način:
+\begin{enumerate}
+    \item Udaljenosti od vrha i dna slike za 4 jednoliko udaljena stupca označene su crvenom bojom.
+    \item Udaljenosti s lijeve i desne strane slike za 4 jednoliko udaljena retka označene su plavom bojom.
+    \item Dijagonalne udaljenosti sa sva 4 ruba slike označene su ljubičastom bojom.
+    \item Udaljenosti od središta slike prema gore, dolje, lijevo i desno označene su zelenom bojom.
+\end{enumerate}
+\begin{figure}[htb]
+    \centering
+    \frame{\includegraphics[width=5cm]{images/features-0.png}}
+    \caption{Značajke za jednu znamenku \emph{JMBAG}-a.}
+    \label{fig:features-for-single-digit}
+\end{figure}
+\begin{figure}[htb]
+    \centering
+    \frame{\includegraphics[width=1cm]{images/features-1.png}}
+    \frame{\includegraphics[width=1cm]{images/features-2.png}}
+    \frame{\includegraphics[width=1cm]{images/features-3.png}}
+    \frame{\includegraphics[width=1cm]{images/features-4.png}}
+    \frame{\includegraphics[width=1cm]{images/features-5.png}}
+    \frame{\includegraphics[width=1cm]{images/features-6.png}}
+    \frame{\includegraphics[width=1cm]{images/features-7.png}}
+    \frame{\includegraphics[width=1cm]{images/features-8.png}}
+    \frame{\includegraphics[width=1cm]{images/features-9.png}}
+    \frame{\includegraphics[width=1cm]{images/features-0.png}}
+    \caption{Značajke za svih 10 znamenaka \emph{JMBAG}-a.}
+    \label{fig:features-for-multiple-digits}
+\end{figure}
+Na ovaj način dobiveno je ukupno 24 udaljenosti koje se skaliraju na raspon $[0, 1]$ koristeći visinu i širinu slike.
+Ovako skalirane udaljenosti koriste se kao značajke koje su ulaz unaprijedne neuronske mreže. Broj skrivenih slojeva
+neuronske mreže nije fiksan te se može podešavati kod postupka učenja, što je opisano u sljedećem odjeljku. Neuronska
+mreža ima ukupno 10 izlaza, jedan za svaku znamenku u rasponu $[0, 9]$. Vrijednosti svakog od izlaza su uvijek u rasponu
+$[0, 1]$ te se stoga izlazi mreže mogu smatrati kao vjerojatnosti da ulazi predstavljaju svaku od znamenki. Kako bi se
+odredila klasifikacije neke znamenke, uzima se vrijednost najvećeg izlaza mreže te se znamenka dodijeljena tom izlazu
+uzima kao klasifikacija ulazne znamenke.
 
 
-\section{Postupak učenja neuronske mreže}
-\label{sec:postupak-ucenja-neuronske-mreze}
+\section{Implementacija sustava za raspoznavanje}
+\label{sec:implementacija-sustava-za-raspoznavanje}
