@@ -21,7 +21,7 @@ u konačan program kojim se trenira neuronska mreža te koji omogućuje raspozna
 \label{sec:pretprocesiranje}
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/preprocessing-original-image.png}
+    \includegraphics[width=12cm]{images/chapter4/preprocessing-original-image.png}
     \caption{\emph{JMBAG} prije pretprocesiranja.}
     \label{fig:preprocessing-original-image}
 \end{figure}
@@ -40,7 +40,7 @@ kvadrirani rezultat pomnoži se s $255$ kako bi se opet dobila vrijednost u rasp
 zatim se koristi kao nova vrijednost komponenata $I_{crvena}$, $I_{zelena}$ i $I_{plava}$ za taj piksel.\\
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/preprocessing-grayscale-image.png}
+    \includegraphics[width=12cm]{images/chapter4/preprocessing-grayscale-image.png}
     \caption{\emph{JMBAG} nakon uklanjanja boje iz slike.}
     \label{fig:preprocessing-grayscale-image}
 \end{figure}
@@ -62,7 +62,7 @@ Slike\ \ref{fig:preprocessing-original-image},\ \ref{fig:preprocessing-grayscale
 i\ \ref{fig:preprocessing-binarized-image} prikazuju jedan \emph{JMBAG} kroz opisane korake pretprocesiranja.
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/preprocessing-binarized-image.png}
+    \includegraphics[width=12cm]{images/chapter4/preprocessing-binarized-image.png}
     \caption{\emph{JMBAG} nakon postupka binarizacije.}
     \label{fig:preprocessing-binarized-image}
 \end{figure}
@@ -79,7 +79,7 @@ koja je odvojena od svih ostalih grupa znamenaka, time ukupno tvoreći 10 grupa 
 slici\ \ref{fig:ideal-segmentation} gdje je svaka grupa piksela obojena različitom bojom.
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/ideal-segmentation.png}
+    \includegraphics[width=12cm]{images/chapter4/ideal-segmentation.png}
     \caption{Idealno odvojene znamenke \emph{JMBAG}-a.}
     \label{fig:ideal-segmentation}
 \end{figure}
@@ -109,8 +109,8 @@ grupa. Stanje prije podešavanja glavnih grupa prikazuje najširu grupu označen
 podešavanja sve znamenke označene različitim bojama.\\
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/segmentation-before-division.png}
-    \includegraphics[width=12cm]{images/segmentation-after-division.png}
+    \includegraphics[width=12cm]{images/chapter4/segmentation-before-division.png}
+    \includegraphics[width=12cm]{images/chapter4/segmentation-after-division.png}
     \caption{\emph{JMBAG} s dvije povezane znamenke prije i nakon podešavanja glavnih grupa piksela.}
     \label{fig:segmentation-division}
 \end{figure}
@@ -130,8 +130,8 @@ na temelju kojih se svaka znamenka izdvaja u zasebnu sliku. Slika\ \ref{fig:assi
 prije i nakon dodjeljivanja sporednih grupa (označenih crnom bojom) glavnim grupama.
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/unassigned-minor-groups.png}
-    \includegraphics[width=12cm]{images/assigned-minor-groups.png}
+    \includegraphics[width=12cm]{images/chapter4/unassigned-minor-groups.png}
+    \includegraphics[width=12cm]{images/chapter4/assigned-minor-groups.png}
     \caption{Glavne i sporedne grupe piksela prije i nakon postupka dodjeljivanja.}
     \label{fig:assigned-minor-groups}
 \end{figure}
@@ -145,16 +145,16 @@ svesti na određen broj značajki. Primjer segmentiranih znamenaka prikazan je n
 slike su različitih dimenzija te njihov omjer visine i širine nije uvijek $1:1$.
 \begin{figure}[htb]
     \centering
-    \frame{\includegraphics[width=1cm]{images/segmented-1.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-2.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-3.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-4.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-5.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-6.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-7.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-8.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-9.png}}
-    \frame{\includegraphics[width=1cm]{images/segmented-0.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-1.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-2.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-3.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-4.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-5.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-6.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-7.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-8.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-9.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/segmented-0.png}}
     \caption{Pojedinačne slike znamenaka nakon segmentiranja.}
     \label{fig:segmented}
 \end{figure}
@@ -169,16 +169,16 @@ Nakon nadopunjavanja slika će uvijek imati omjer širine i visine jednak $1:1$,
 slici\ \ref{fig:scaled}.
 \begin{figure}[htb]
     \centering
-    \frame{\includegraphics[width=1cm]{images/scaled-1.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-2.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-3.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-4.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-5.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-6.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-7.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-8.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-9.png}}
-    \frame{\includegraphics[width=1cm]{images/scaled-0.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-1.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-2.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-3.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-4.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-5.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-6.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-7.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-8.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-9.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/scaled-0.png}}
     \caption{Pojedinačne znamenke nakon ujednačavanja visine i širine.}
     \label{fig:scaled}
 \end{figure}
@@ -187,16 +187,16 @@ i širinu slike sa svake strane za $20\%$, tako de će se ukupna visina i širin
 na slici\ \ref{fig:padding}.
 \begin{figure}[htb]
     \centering
-    \frame{\includegraphics[width=1cm]{images/padding-1.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-2.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-3.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-4.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-5.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-6.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-7.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-8.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-9.png}}
-    \frame{\includegraphics[width=1cm]{images/padding-0.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-1.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-2.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-3.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-4.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-5.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-6.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-7.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-8.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-9.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/padding-0.png}}
     \caption{Segmentiranje znamenke nakon konačnog postupka nadopunjavanja.}
     \label{fig:padding}
 \end{figure}
@@ -213,22 +213,22 @@ slici\ \ref{fig:features-for-single-digit} za jednu znamenku te na slici\ \ref{f
 \end{enumerate}
 \begin{figure}[htb]
     \centering
-    \frame{\includegraphics[width=5cm]{images/features-0.png}}
+    \frame{\includegraphics[width=5cm]{images/chapter4/features-0.png}}
     \caption{Značajke za jednu znamenku \emph{JMBAG}-a.}
     \label{fig:features-for-single-digit}
 \end{figure}
 \begin{figure}[htb]
     \centering
-    \frame{\includegraphics[width=1cm]{images/features-1.png}}
-    \frame{\includegraphics[width=1cm]{images/features-2.png}}
-    \frame{\includegraphics[width=1cm]{images/features-3.png}}
-    \frame{\includegraphics[width=1cm]{images/features-4.png}}
-    \frame{\includegraphics[width=1cm]{images/features-5.png}}
-    \frame{\includegraphics[width=1cm]{images/features-6.png}}
-    \frame{\includegraphics[width=1cm]{images/features-7.png}}
-    \frame{\includegraphics[width=1cm]{images/features-8.png}}
-    \frame{\includegraphics[width=1cm]{images/features-9.png}}
-    \frame{\includegraphics[width=1cm]{images/features-0.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-1.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-2.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-3.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-4.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-5.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-6.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-7.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-8.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-9.png}}
+    \frame{\includegraphics[width=1cm]{images/chapter4/features-0.png}}
     \caption{Značajke za svih 10 znamenaka \emph{JMBAG}-a.}
     \label{fig:features-for-multiple-digits}
 \end{figure}
@@ -243,3 +243,226 @@ uzima kao klasifikacija ulazne znamenke.
 
 \section{Implementacija sustava za raspoznavanje}
 \label{sec:implementacija-sustava-za-raspoznavanje}
+Prethodno opisane faze zajedno čine sustav za raspoznavanje \emph{JMBAG}-ova. Sustav je implementiran kao jedinstven
+program koji nudi mogućnost treniranja neuronske mreže, testiranja točnosti istrenirane neuronske mreže, mogućnost
+odvojenog pretprocesiranja, segmentiranja i odabira značajki kako bi se izbjeglo ponavljano učitavanje istih slika, te
+mogućnost raspoznavanja pojedinih slika. Funkcija programa odabire se pri njegovom pokretanju preko argumenata
+naredbenog retka. Kao prvi argument program očekuje željenu funkciju:
+\begin{enumerate}
+    \item Za funkciju odvojenog pretprocesiranja, segmentiranja i odabira značajki prvi argument mora biti
+    \texttt{prepare}.
+    \item Za funkciju treniranja neuronske mreže prvi argument mora biti \texttt{train}.
+    \item Za funkciju testiranja neuronske mreže prvi argument mora biti \texttt{test}.
+    \item Za funkciju raspoznavanja pojedinih slika prvi argument mora biti \texttt{apply}.
+\end{enumerate}
+
+\subsection{Funkcija \texttt{prepare}}
+\label{subsec:funkcija-prepare}
+Ova funkcija nudi mogućnost odvojene obrade slika u svrhu bržeg učitavanja kod postupka treniranja. Pri pokretanju
+programa koristeći ovu funkciju nad ulaznim slikama bit će obavljen postupak pretprocesiranja, segmentacije i odabira
+značajki te će pronađene značajke i labele biti spremljene u navedenu datoteku u tekstualnom formatu\footnote{Primjer
+zapisa značajki u ovom formatu dostupan je u
+dodatku\ \ref{ch:primjer-serijaliziranih-podataka-znacajki-slike-i-neuronske-mreze}.}.
+\begin{table}[htb]
+    \caption{Argumenti funkcije \texttt{prepare}.}
+    \label{tab:prepare-args}
+    \scriptsize
+    \centering
+    \begin{tabular}{|M{3.5cm}|M{2.5cm}|M{6cm}|}
+        \hline
+        Argument & Tip & Opis \\
+        \hline
+        \texttt{-{}-images \underline{DIR}} & Direktorij & Obavezan argument koji specificira direktorij
+        \texttt{\underline{DIR}} u kojem se nalaze slike znamenaka. Labela slike očekuje se u prvih
+        \texttt{\underline{N}} znakova imena slike, gjde je \texttt{\underline{N}} određen argumentom
+        \texttt{-{}-n-per-image}. \\
+        \hline
+        \texttt{-{}-n-per-image \underline{N}} & Pozitivan cijeli broj & Neobavezan argument koji specificira broj
+        znamenaka \texttt{\underline{N}} koji se nalazi na svakoj od ulaznih slika. Ako ovaj argument nije naveden,
+        pretpostavljena vrijednost je $10$ znamenaka po slici. \\
+        \hline
+        \texttt{-{}-output \underline{DAT}} & Datoteka & Obavezan argument koji specificira izlaznu datoteku
+        \texttt{\underline{DAT}} u koju će biti spremljeni serijalizirani podatci o značajkama ulaznih slika. \\
+        \hline
+        \texttt{-{}-debug \underline{DIR}} & Direktorij & Neobavezan argument koji specificira direktorij
+        \texttt{\underline{DIR}} u koji će biti spremljene slike koraka pretprocesiranja, segmentacije i odabira
+        značajki. \\
+        \hline
+    \end{tabular}
+\end{table}
+Tablica\ \ref{tab:prepare-args} opisuje dostupne argumente funkcije \texttt{prepare}, dok
+slika\ \ref{fig:prepare-diagram} prikazuje blok-dijagram implementacije te funkcije.
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=12cm]{images/chapter4/prepare-diagram.pdf}
+    \caption{Blok-dijagram funkcije \texttt{prepare}.}
+    \label{fig:prepare-diagram}
+\end{figure}
+
+\subsection{Funkcija \texttt{train}}
+\label{subsec:funkcija-train}
+Od sve 4 dostupne funkcije, funkcija \texttt{train} je najkompleksnija i nudi najveći opseg različitih opcija pri
+pokretanju. Zadatak ove funkcije je učitati sirove slike ili tekstualne značajke slika te koristeći njih trenirati
+novu ili postojeću neuronsku mrežu. Kod stvaranja nove neuronske mreže, težinski faktori bit će inicijalizirani na
+nasumične vrijednosti u rasponu $[-0.4, 0.4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $24$, izlazni
+sloj veličine $10$, te proizvoljan broj i dimenzije skrivenih slojeva. Argumenti koji određuju hoće li se koristiti
+slike ili tekstualne značajke te hoće li se trenirati nova ili postojeća mreža opisani su u
+tablici\ \ref{tab:train-args-1}.
+\begin{table}[htb]
+    \caption{Argumenti funkcije \texttt{train} za podešavanje ulaznih slika i neuronske mreže.}
+    \label{tab:train-args-1}
+    \scriptsize
+    \centering
+    \begin{tabular}{|M{3.5cm}|M{2.5cm}|M{6cm}|}
+        \hline
+        Argument & Tip & Opis \\
+        \hline
+        \texttt{-{}-images \underline{DIR}} & Direktorij & Argument koji specificira direktorij \texttt{\underline{DIR}}
+        u kojem se nalaze slike znamenaka koje će se koristiti za treniranje neuronske mreže. Labela slike očekuje se u
+        prvih \texttt{\underline{N}} znakova imena slike, gjde je \texttt{\underline{N}} određen argumentom
+        \texttt{-{}-n-per-image}. \\
+        \hline
+        \texttt{-{}-n-per-image \underline{N}} & Pozitivan cijeli broj & Neobavezan argument koji specificira broj
+        znamenaka \texttt{\underline{N}} koji se nalazi na svakoj od ulaznih slika. Ako ovaj argument nije naveden,
+        pretpostavljena vrijednost je $10$ znamenaka po slici. Vrijednost ovog argumenta koristi se samo u slučaju kada
+        je specificiran argument \texttt{-{}-images}. \\
+        \hline
+        \texttt{-{}-features \underline{DIR}} & Direktorij & Argument koji specificira direktorij
+        \texttt{\underline{DIR}} u kojem se nalaze serijalizirane značajke koje će se koristiti za treniranje neuronske
+        mreže. \\
+        \hline
+        \texttt{-{}-load \underline{DAT}} & Datoteka & Argument koji specificira datoteku \texttt{\underline{DAT}} u
+        kojoj se nalazi serijalizirani opis neuronske mreže koju treba trenirati. \\
+        \hline
+        \texttt{-{}-layout \underline{STR}} & Niz pozitivnih cijelih brojeva odvojenih znakom \emph{`x'} &
+        Neobavezan argument koji specificira strukturu \texttt{\underline{STR}} skrivenih slojeva neuronske mreže.
+        Dimenzije skrivenih slojeva odvojene su znakom \emph{`x'}. Ako ovaj argument nije naveden, njegova
+        pretpostavljena vrijednost je \emph{``10x10''}. Ako je naveden argument \texttt{-{}-load}, ovaj argument bit će
+        zanemaren. \\
+        \hline
+    \end{tabular}
+\end{table}
+Pri pokretanju naredbe \texttt{train} obavezno je navesti argument \texttt{-{}-images} ili argument
+\texttt{-{}-features}. Ako su navedena oba argumenta, bit će korištena vrijednost argumenta koji je naveden posljednji u
+nizu. Naredba \texttt{train} također nudi argumente za podešavanje algoritma \emph{Backpropagation} koji se koristi za
+treniranje neuronske mreže koji su navedeni u tablici\ \ref{tab:train-args-2}.
+\begin{table}[htb]
+    \caption{Argumenti funkcije \texttt{train} za podešavanje algoritma \emph{Backpropagation}.}
+    \label{tab:train-args-2}
+    \scriptsize
+    \centering
+    \begin{tabular}{|M{3.5cm}|M{2.5cm}|M{6cm}|}
+        \hline
+        Argument & Tip & Opis \\
+        \hline
+        \texttt{-{}-step \underline{$\eta$}} & Broj & Neobavezan argument koji specificira stopu učenja
+        \texttt{\underline{$\eta$}} koja će se koristiti. Ako ovaj argument nije naveden, njegova pretpostavljena
+        vrijednost je $1$. \\
+        \hline
+        \texttt{-{}-batch-size \underline{N}} & Pozitivan cijeli broj ili znakovni niz \emph{``all''} & Neobavezan
+        argument koji specificira broj uzoraka za učenje \texttt{\underline{N}} koji će se koristiti u svakoj epohi
+        algoritma. Umjesto broja moguće je navesti znakovni niz \emph{``all''} koji specificira da se koriste svi
+        dostupni uzorci iz skupa za učenje u svakoj epohi algoritma. Ako ovaj argument nije naveden, njegova
+        pretpostavljena vrijednost je \emph{``all''}. \\
+        \hline
+        \texttt{-{}-max-iters \underline{N}} & Pozitivan cijeli broj & Neobavezan argument koji specificira maksimalan
+        broj epoha \texttt{\underline{N}} koji će algoritam izvršiti. Ako ovaj argument nije naveden, njegova
+        pretpostavljena vrijednost je $10000$. \\
+        \hline
+        \texttt{-{}-target-error \underline{E}} & Broj & Neobavezan argument koji specificira stopu greške
+        \texttt{\underline{E}} nakon koje će se algoritam zaustaviti. Ako ovaj argument nije naveden, njegova
+        pretpostavljena vrijednost je $10^{-7}$. \\
+        \hline
+        \texttt{-{}-inertia \underline{$\alpha$}} & Broj & Neobavezan argument koji specificira koeficijent inercije
+        \underline{$\alpha$}. Ako ovaj argument nije naveden, njegova pretpostavljena vrijednost je $0$. \\
+        \hline
+    \end{tabular}
+\end{table}
+Također je moguće dodati kriterij zaustavljanja učenja pri porastu greške na ispitnom skupu koristeći argumente opisane
+u tablici\ \ref{tab:train-args-3}. Argumenti \texttt{-{}-test-images} i \texttt{-{}-test-features} su međusobno
+isključivi kao argumenti \texttt{-{}-images} i \texttt{-{}-features} te će biti korišten samo argument koji je naveden
+posljednji u nizu. Uz sve do sada navedene argumente dostupna su još dva argumenta: \texttt{-{}-output} i
+\texttt{-{}-debug}. Argument \texttt{-{}-output} očekuje putanju datoteke u koju će biti spremljena serijalizirana
+neuronska mreža dok je argument \texttt{-{}-debug} isti kao kod funkcije \texttt{prepare}, ali će se koristiti samo ako
+je specificiran argument \texttt{-{}-images}. Na slici\ \ref{fig:train-diagram} prikazan je blok-dijagram funkcije
+\texttt{train} bez dijela za učitavanje slika ispitnog skupa, koji je isti kao dio za učitavanje slika skupa za
+treniranje.
+\begin{table}[!htb]
+    \caption{Argumenti funkcije \texttt{train} za podešavanje kriterija zaustavljanja pri porastu greške na ispitnom
+    skupu.}
+    \label{tab:train-args-3}
+    \scriptsize
+    \centering
+    \begin{tabular}{|M{3.9cm}|M{2.1cm}|M{6cm}|}
+        \hline
+        Argument & Tip & Opis \\
+        \hline
+        \texttt{-{}-test-images \underline{DIR}} & Direktorij & Neobavezan argument koji specificira direktorij
+        \texttt{\underline{DIR}} u kojem se nalaze slike ispitnog skupa. Ovaj argument koristi vrijednost argumenta
+        \texttt{-{}-n-per-image} kao broj znamenaka na svakoj slici u ispitnom skupu. \\
+        \hline
+        \texttt{-{}-test-features \underline{DIR}} & Direktorij & Neobavezan argument koji specificira direktorij
+        \texttt{\underline{DIR}} u kojem se nalaze serijalizirane značajke ispitnog skupa. \\
+        \hline
+        \texttt{-{}-test-moving-average \underline{N}} & Pozitivan cijeli broj & Neobavezan argument koji specificira
+        broj zadnjih \texttt{\underline{N}} epoha algoritma za koje će se računati prosječna greška na ispitnom skupu.
+        Kada izračunata prosječna greška počne rasti, algoritam prekida s radom. Ako ovaj argument nije naveden, njegova
+        pretpostavljena vrijednost je $1$. \\
+        \hline
+    \end{tabular}
+\end{table}
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=12cm]{images/chapter4/train-diagram.pdf}
+    \caption{Blok-dijagram funkcije \texttt{train}.}
+    \label{fig:train-diagram}
+\end{figure}
+\newpage
+
+\subsection{Funkcija \texttt{test}}
+\label{subsec:funkcija-test}
+Funkcija \texttt{test} služi kako bi se provjerila točnost naučene neuronske mreže. Kod pokretanja programa koristeći
+ovu funkciju može se navesti jedna ili više neuronskih mreža za koje će se provjeravati točnost na zadanom ispitnom
+skupu. Ispitni skup zadaje se preko argumenta \texttt{-{}-images} uz argument \texttt{-{}-n-per-image} ili preko
+argumenta \texttt{-{}-features}, koji se zadaju na isti način kako je opisano za funkciju \texttt{train}\footnote{
+Također je dostupan i argument \texttt{-{}-debug} na isti način kao i kod funkcije \texttt{train}.}. Neuronske mreže
+koje je potrebno testirati zadaju se preko argumenta \texttt{-{}-nn-paths} koji očekuje jednu ili više datoteka koje
+sadrže neuronske mreže. Zbog toga argument \texttt{-{}-nn-paths} mora biti naveden zadnji u nizu. Ako su navedeni samo
+ispitni podatci i neuronske mreže, funkcija \texttt{test} ispisat će samo postotak točnih klasifikacija na ispitnom
+skupu pojedinačno za svaku od navedenih neuronskim mreža. Tablica\ \ref{tab:test-args} navodi argumente funkcije
+\texttt{train} koji nude dodatne mogućnosti pri testiranju neuronskih mreža. Primjeri ispisa ove funkcije dostupni su u
+dodatku\ \ref{ch:primjeri-ispisa-funkcije-test}.
+
+\begin{table}[!htb]
+    \caption{Argumenti funkcije \texttt{test} koji nude dodatne mogućnosti pri testiranju.}
+    \label{tab:test-args}
+    \scriptsize
+    \centering
+    \begin{tabular}{|M{3.5cm}|M{8.5cm}|}
+        \hline
+        Argument & Opis \\
+        \hline
+        \texttt{-{}-detail-by-number} & Kada je ovaj argument naveden ispis funkcije \texttt{test} će uključivati
+        postotke točnih i pogrešnih klasifikacija za svaku od 10 znamenaka koje se raspoznaju. Ova statistika bit će
+        ispisana zasebno za svaku od navedenih neuronskih mreža, osim ako je naveden argument \texttt{-{}-ensemble}. \\
+        \hline
+        \texttt{-{}-print-misses} & Navođenjem ovog argumenta bit će ispisane sve pogrešne klasifikacije svih ispitnih
+        primjera uz ime datoteke ispitnog primjera. Ova statistika bit će ispisana zasebno za svaku od navedenih
+        neuronskih mreža, osim ako je naveden argument \texttt{-{}-ensemble}. \\
+        \hline
+        \texttt{-{}-ensemble} & Ovaj argument će kombinirati sve navedene neuronske mreže je jedan klasifikator tako da
+        se izlazi svih neuronskih mreža međusobno zbrajaju. Kada je ovaj argument naveden sve ostale statistike bit će
+        ispisane samo jednom, kao da je navedena samo jedna neuronska mreža. \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Funkcija \texttt{apply}}
+\label{subsec:funkcija-apply}
+Ovo je najjednostavnija funkcija programa koja omogućuje raspoznavanje znamenaka na navedenim ulaznim slikama koristeći
+odabranu neuronsku mrežu. Funkcija će za svaku od navedenih slika ispisati njeno ime i klasifikaciju brojeva na njoj,
+ako je moguće ispravno provesti proces segmentacije znamenaka. Već ranije opisan argument \texttt{-{}-n-per-image}
+određuje broj znamenaka na svakoj slici, argument \texttt{-{}-nn-path} određuje putanju do datoteke koja sadrži opis
+neuronske mreže dok argument \texttt{-{}-images} specificira listu slika koje treba raspoznati. Za razliku od prijašnjih
+funkcija, u ovoj funkciji argument \texttt{-{}-images} ne očekuje direktorij već listu pojedinačnih datoteka pa se
+stoga mora nalaziti posljednji u nizu argumenata pri pokretanju programa.

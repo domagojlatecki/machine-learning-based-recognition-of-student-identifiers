@@ -2,7 +2,10 @@
 \label{ch:koristeni-modeli-strojnog-ucenja}
 U svrhu raspoznavanja rukom pisanih znakova u ovom radu razmatrane su određene tehnike i modeli strojnog učenja. Ovo
 poglavlje detaljno opisuje korišten model neuronske mreže kao i algoritam \emph{Backpropagation} koji je korišten za
-pronalaženje optimalnih težina neuronske mreže.
+pronalaženje optimalnih težina neuronske mreže. Točna struktura korištene mreže opisana je
+u\ \ref{ch:rezultati-i-analiza}. poglavlju, dok je opis implementacije neuronske mreže i gradijentnog spusta u
+programskom jeziku \emph{Scala} opisan u
+dodatku\ \ref{ch:implementacija-neuronske-mreze-i-gradijentnog-spusta-u-programskom-jeziku-scala}.
 
 
 \section{Neuronska mreža}
@@ -34,7 +37,7 @@ obično nalazi težina $w_0$ koja predstavlja prag paljenja neurona. Ukupna pobu
 \\
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/artificial-neuron-model.pdf}
+    \includegraphics[width=12cm]{images/chapter3/artificial-neuron-model.pdf}
     \caption{Model umjetnog neurona.}
     \label{fig:model-umjetnog-neurona}
 \end{figure}
@@ -54,7 +57,7 @@ glasi:\\
 Ova derivacija koristit će se u izvodima u odjeljku\ \ref{sec:algoritam-backpropagation}.
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=10cm]{images/logistic-function.pdf}
+    \includegraphics[width=10cm]{images/chapter3/logistic-function.pdf}
     \caption{Graf logističke prijenosne funkcije.}
     \label{fig:logistic-function}
 \end{figure}
@@ -86,7 +89,7 @@ Struktura jednostavne unaprijedne neuronske mreže prikazana je na slici\footnot
 iz\ \citep{cupic2013}.}\ \ref{fig:simple-neural-network}.
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=12cm]{images/simple-neural-network.pdf}
+    \includegraphics[width=12cm]{images/chapter3/simple-neural-network.pdf}
     \caption{Struktura jednostavne unaprijedne neuronske mreže.}
     \label{fig:simple-neural-network}
 \end{figure}
@@ -102,7 +105,6 @@ Prikazana neuronska mreža sastoji se od tri sloja:
     slici\ \ref{fig:simple-neural-network} može definirati kao $4 \times 2 \times 3$.
 \end{enumerate}
 Struktura neuronske mreže koja je korištena u ovom radu analogna opisanom primjeru, ali s više slojeva većih dimenzija.
-Točna struktura korištene mreže opisana je u\ \ref{ch:rezultati-i-analiza}. poglavlju.
 
 
 \section{Algoritam \emph{Backpropagation}}

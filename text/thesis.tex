@@ -1,57 +1,65 @@
 \documentclass[times, utf8, diplomski]{fer}
 \usepackage{booktabs}
+\usepackage{array}
+\newcolumntype{M}[1]{ >{\centering\arraybackslash}m{#1} }
 \usepackage[hidelinks]{hyperref}
 
 \begin{document}
 
-\thesisnumber{2278}
+    \thesisnumber{2278}
 
-\title{Očitavanje rukom pisanih identifikacijskih brojeva temeljeno na strojnom učenju}
+    \title{Očitavanje rukom pisanih identifikacijskih brojeva temeljeno na strojnom učenju}
 
-\author{Domagoj Latečki}
+    \author{Domagoj Latečki}
 
-\maketitle
+    \maketitle
 
-\izvornik % TODO remove?
+    \izvornik % TODO remove?
 
-\zahvala{} % TODO
+    \zahvala{} % TODO
 
-\listoffigures
+    \listoffigures
 
-\tableofcontents
+    \listoftables
 
-\include{chapters/chapter1}
+    \tableofcontents
 
-\include{chapters/chapter2}
+    \include{chapters/chapter1}
 
-\include{chapters/chapter3}
+    \include{chapters/chapter2}
 
-\include{chapters/chapter4}
+    \include{chapters/chapter3}
 
-\include{chapters/chapter5}
+    \include{chapters/chapter4}
 
-\include{chapters/chapter6}
+    \include{chapters/chapter5}
 
-\bibliography{literature}
-\bibliographystyle{fer}
+    \include{chapters/chapter6}
 
-\appendix
+    \bibliography{literature}
+    \bibliographystyle{fer}
 
-\include{chapters/appendixA}
+    \appendix
 
-\include{chapters/appendixB}
+    \include{chapters/appendixA}
 
-\begin{sazetak}
-Sažetak na hrvatskom jeziku. % TODO
+    \include{chapters/appendixB}
 
-\kljucnerijeci{Ključne riječi, odvojene zarezima.} % TODO
-\end{sazetak}
+    \include{chapters/appendixC}
 
-\engtitle{Machine Learning Based Recognition of Student Identifiers}
-\begin{abstract}
-Abstract. % TODO
+    \include{chapters/appendixD}
 
-\keywords{Keywords.} % TODO
-\end{abstract}
+    \begin{sazetak}
+        Sažetak na hrvatskom jeziku. % TODO
+
+        \kljucnerijeci{Ključne riječi, odvojene zarezima.} % TODO
+    \end{sazetak}
+
+    \engtitle{Machine Learning Based Recognition of Student Identifiers}
+    \begin{abstract}
+        Abstract. % TODO
+
+        \keywords{Keywords.} % TODO
+    \end{abstract}
 
 \end{document}

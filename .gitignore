@@ -15,6 +15,7 @@ text/*.pdf
 *.bbl
 *.blg
 *.log
+*.lot
 *.lof
 *.out
 *.toc
