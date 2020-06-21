@@ -1,3 +1,195 @@
 \chapter{Primjeri ispisa funkcije \texttt{test}}
 \label{ch:primjeri-ispisa-funkcije-test}
-Primjeri ispisa funkcije \texttt{test} % TODO
+Funkcija \texttt{test} nudi nekoliko argumenata kojima se dobiva detaljniji ispis točnosti raspoznavanja. Ovaj dodatak
+sadrži primjere ispisa koristeći te argumente.
+
+\subsection*{Primjer ispisa za 8 neuronskih mreža bez dodatnih argumenata}
+\scriptsize
+\texttt{
+\\
+Test accuracy: 87.57\%\\
+Test accuracy: 89.88\%\\
+Test accuracy: 91.46\%\\
+Test accuracy: 88.58\%\\
+Test accuracy: 91.31\%\\
+Test accuracy: 91.64\%\\
+Test accuracy: 91.25\%\\
+Test accuracy: 90.15\%\\
+Done\\
+}
+
+\texttt{}
+\normalsize
+
+\subsection*{Primjer ispisa za 8 neuronskih mreža koristeći argument\newline\texttt{-{}-ensemble}}
+\scriptsize
+\texttt{
+\\
+Test accuracy: 91.94\%\\
+Done\\
+}
+
+\texttt{}
+\normalsize
+\newpage
+
+\subsection*{Primjer ispisa za jednu neuronsku mrežu koristeći argument\newline\texttt{-{}-detail-by-number}}
+\scriptsize
+\texttt{
+\\
+Test accuracy: 91.46\%\\
+Number [0]:\\
+- guessed as [0]: 93.70\%\\
+- guessed as [1]: 0.51\%\\
+- guessed as [2]: 0.80\%\\
+- guessed as [3]: 0.58\%\\
+- guessed as [4]: 0.80\%\\
+- guessed as [5]: 0.51\%\\
+- guessed as [6]: 1.01\%\\
+- guessed as [7]: 0.43\%\\
+- guessed as [8]: 1.09\%\\
+- guessed as [9]: 0.58\%\\
+\newline
+Number [1]:\\
+- guessed as [0]: 0.57\%\\
+- guessed as [1]: 95.93\%\\
+- guessed as [2]: 0.57\%\\
+- guessed as [3]: 0.16\%\\
+- guessed as [4]: 0.49\%\\
+- guessed as [5]: 0.33\%\\
+- guessed as [6]: 0.16\%\\
+- guessed as [7]: 0.57\%\\
+- guessed as [8]: 0.73\%\\
+- guessed as [9]: 0.49\%\\
+\newline
+Number [2]:\\
+- guessed as [0]: 0.93\%\\
+- guessed as [1]: 1.26\%\\
+- guessed as [2]: 93.44\%\\
+- guessed as [3]: 1.09\%\\
+- guessed as [4]: 0.25\%\\
+- guessed as [5]: 0.67\%\\
+- guessed as [6]: 0.08\%\\
+- guessed as [7]: 0.67\%\\
+- guessed as [8]: 1.01\%\\
+- guessed as [9]: 0.59\%\\
+\newline
+Number [3]:\\
+- guessed as [0]: 0.96\%\\
+- guessed as [1]: 0.79\%\\
+- guessed as [2]: 1.57\%\\
+- guessed as [3]: 89.76\%\\
+- guessed as [4]: 0.44\%\\
+- guessed as [5]: 1.22\%\\
+- guessed as [6]: 0.35\%\\
+- guessed as [7]: 0.79\%\\
+- guessed as [8]: 1.05\%\\
+- guessed as [9]: 3.06\%\\
+\newline
+Number [4]:\\
+- guessed as [0]: 1.02\%\\
+- guessed as [1]: 2.03\%\\
+- guessed as [2]: 0.18\%\\
+- guessed as [3]: 0.18\%\\
+- guessed as [4]: 91.40\%\\
+- guessed as [5]: 1.48\%\\
+- guessed as [6]: 0.74\%\\
+- guessed as [7]: 1.02\%\\
+- guessed as [8]: 0.28\%\\
+- guessed as [9]: 1.66\%\\
+\newline
+Number [5]:\\
+- guessed as [0]: 0.76\%\\
+- guessed as [1]: 0.66\%\\
+- guessed as [2]: 0.66\%\\
+- guessed as [3]: 1.80\%\\
+- guessed as [4]: 0.95\%\\
+- guessed as [5]: 89.89\%\\
+- guessed as [6]: 0.95\%\\
+- guessed as [7]: 1.04\%\\
+- guessed as [8]: 1.70\%\\
+- guessed as [9]: 1.61\%\\
+\newline
+Number [6]:\\
+- guessed as [0]: 1.52\%\\
+- guessed as [1]: 0.51\%\\
+- guessed as [2]: 0.81\%\\
+- guessed as [3]: 0.30\%\\
+- guessed as [4]: 1.52\%\\
+- guessed as [5]: 1.42\%\\
+- guessed as [6]: 91.57\%\\
+- guessed as [7]: 0.91\%\\
+- guessed as [8]: 1.42\%\\
+- guessed as [9]: 0.00\%\\
+\newline
+Number [7]:\\
+- guessed as [0]: 0.21\%\\
+- guessed as [1]: 1.36\%\\
+- guessed as [2]: 0.94\%\\
+- guessed as [3]: 0.63\%\\
+- guessed as [4]: 1.15\%\\
+- guessed as [5]: 0.42\%\\
+- guessed as [6]: 0.63\%\\
+- guessed as [7]: 92.49\%\\
+- guessed as [8]: 0.42\%\\
+- guessed as [9]: 1.77\%\\
+\newline
+Number [8]:\\
+- guessed as [0]: 2.61\%\\
+- guessed as [1]: 1.71\%\\
+- guessed as [2]: 1.44\%\\
+- guessed as [3]: 0.72\%\\
+- guessed as [4]: 0.54\%\\
+- guessed as [5]: 1.44\%\\
+- guessed as [6]: 0.81\%\\
+- guessed as [7]: 1.35\%\\
+- guessed as [8]: 88.23\%\\
+- guessed as [9]: 1.17\%\\
+\newline
+Number [9]:\\
+- guessed as [0]: 2.05\%\\
+- guessed as [1]: 1.42\%\\
+- guessed as [2]: 0.55\%\\
+- guessed as [3]: 2.21\%\\
+- guessed as [4]: 2.44\%\\
+- guessed as [5]: 1.18\%\\
+- guessed as [6]: 0.24\%\\
+- guessed as [7]: 0.71\%\\
+- guessed as [8]: 1.50\%\\
+- guessed as [9]: 87.71\%\\
+\newline
+Done\\
+}
+
+\texttt{}
+\normalsize
+
+\subsection*{Primjer ispisa za jednu neuronsku mrežu koristeći argument\newline\texttt{-{}-print-misses}}
+\scriptsize
+\texttt{
+\\
+Test accuracy: 91.46\%\\
+1234567890-Set-17 guessed as: 1234527890\\
+8888888888-Set-1-Pencil-1 guessed as: 8888858888\\
+2252233633-Set-6 guessed as: 2292239633\\
+5665775885-Set-4 guessed as: 8566775885\\
+8998008118-Set-31 guessed as: 8938008118\\
+0102030405-Set-16 guessed as: 0420304035\\
+9988776655-Set-30 guessed as: 9988796655\\
+5665775885-Set-23 guessed as: 5705775875\\
+3443553663-Set-4 guessed as: 3443853660\\
+...\\
+4545454545-Set-15 guessed as: 1545450153\\
+2252233633-Set-9 guessed as: 1252233633\\
+4484455955-Set-10 guessed as: 4484492355\\
+5566778899-Set-16 guessed as: 5566778894\\
+0102030405-Set-7 guessed as: 0102030005\\
+5566778899-Set-27 guessed as: 5566772850\\
+3434343434-Set-18 guessed as: 3434949434\\
+3434343434-Set-7 guessed as: 9494243499\\
+5595566066-Set-5 guessed as: 8598866066\\
+Done\\
+}
+
+\texttt{}
+\normalsize
