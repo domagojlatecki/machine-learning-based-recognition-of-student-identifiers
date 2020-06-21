@@ -206,10 +206,10 @@ prvog crnog piksela počevši od središta slike. Ove udaljenosti prikazane su n
 slici\ \ref{fig:features-for-single-digit} za jednu znamenku te na slici\ \ref{fig:features-for-multiple-digits} za svih
 10 znamenaka. Na obje slike udaljenosti su označene različitim bojama na sljedeći način:
 \begin{enumerate}
-    \item Udaljenosti od vrha i dna slike za 4 jednoliko udaljena stupca označene su crvenom bojom.
-    \item Udaljenosti s lijeve i desne strane slike za 4 jednoliko udaljena retka označene su plavom bojom.
+    \item Udaljenosti od vrha i dna slike za 6 jednoliko udaljenih stupaca označene su crvenom bojom.
+    \item Udaljenosti s lijeve i desne strane slike za 6 jednoliko udaljenih redaka označene su plavom bojom.
     \item Dijagonalne udaljenosti sa sva 4 ruba slike označene su ljubičastom bojom.
-    \item Udaljenosti od središta slike prema gore, dolje, lijevo i desno označene su zelenom bojom.
+    \item Udaljenosti od središta slike prema gore, dolje, lijevo, desno te po 4 dijagonale označene su zelenom bojom.
 \end{enumerate}
 \begin{figure}[htb]
     \centering
@@ -232,7 +232,7 @@ slici\ \ref{fig:features-for-single-digit} za jednu znamenku te na slici\ \ref{f
     \caption{Značajke za svih 10 znamenaka \emph{JMBAG}-a.}
     \label{fig:features-for-multiple-digits}
 \end{figure}
-Na ovaj način dobiveno je ukupno 24 udaljenosti koje se skaliraju na raspon $[0, 1]$ koristeći visinu i širinu slike.
+Na ovaj način dobiveno je ukupno 36 udaljenosti koje se skaliraju na raspon $[0, 1]$ koristeći visinu i širinu slike.
 Ovako skalirane udaljenosti koriste se kao značajke koje su ulaz unaprijedne neuronske mreže. Broj skrivenih slojeva
 neuronske mreže nije fiksan te se može podešavati kod postupka učenja, što je opisano u sljedećem odjeljku. Neuronska
 mreža ima ukupno 10 izlaza, jedan za svaku znamenku u rasponu $[0, 9]$. Vrijednosti svakog od izlaza su uvijek u rasponu
@@ -304,7 +304,7 @@ slika\ \ref{fig:prepare-diagram} prikazuje blok-dijagram implementacije te funkc
 Od sve 4 dostupne funkcije, funkcija \texttt{train} je najkompleksnija i nudi najveći opseg različitih opcija pri
 pokretanju. Zadatak ove funkcije je učitati sirove slike ili tekstualne značajke slika te koristeći njih trenirati
 novu ili postojeću neuronsku mrežu. Kod stvaranja nove neuronske mreže, težinski faktori bit će inicijalizirani na
-nasumične vrijednosti u rasponu $[-0.4, 0.4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $24$, izlazni
+nasumične vrijednosti u rasponu $[-0.4, 0.4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $36$, izlazni
 sloj veličine $10$, te proizvoljan broj i dimenzije skrivenih slojeva. Argumenti koji određuju hoće li se koristiti
 slike ili tekstualne značajke te hoće li se trenirati nova ili postojeća mreža opisani su u
 tablici\ \ref{tab:train-args-1}.
@@ -460,9 +460,10 @@ dodatku\ \ref{ch:primjeri-ispisa-funkcije-test}.
 \subsection{Funkcija \texttt{apply}}
 \label{subsec:funkcija-apply}
 Ovo je najjednostavnija funkcija programa koja omogućuje raspoznavanje znamenaka na navedenim ulaznim slikama koristeći
-odabranu neuronsku mrežu. Funkcija će za svaku od navedenih slika ispisati njeno ime i klasifikaciju brojeva na njoj,
+odabranu neuronsku mrežu. Funkcija će za svaku od navedenih slika ispisati njeno ime i klasifikaciju brojeva na njoj
 ako je moguće ispravno provesti proces segmentacije znamenaka. Već ranije opisan argument \texttt{-{}-n-per-image}
-određuje broj znamenaka na svakoj slici, argument \texttt{-{}-nn-path} određuje putanju do datoteke koja sadrži opis
-neuronske mreže dok argument \texttt{-{}-images} specificira listu slika koje treba raspoznati. Za razliku od prijašnjih
-funkcija, u ovoj funkciji argument \texttt{-{}-images} ne očekuje direktorij već listu pojedinačnih datoteka pa se
-stoga mora nalaziti posljednji u nizu argumenata pri pokretanju programa.
+određuje broj znamenaka na svakoj slici, argument \texttt{-{}-nn-paths} određuje\hfill{}putanje\hfill{}do\hfill{}
+datoteka\hfill{}koje\hfill{}sadrže\hfill{}opise\hfill{}neuronskih mreža dok\hfill{}argument\break\texttt{-{}-images}
+specificira direktorij u kojem se nalaze slike koje treba raspoznati. Kako argument \texttt{-{}-nn-paths} očekuje jednu
+ili više putanja do datoteka, on treba biti naveden posljednji u nizu argumenata. Mreže koje su navedene ovim argumentom
+bit će kombinirane u jedan klasifikator zbrajanjem njihovih izlaznih vrijednosti.

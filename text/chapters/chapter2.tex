@@ -143,7 +143,7 @@ intenzitete piksela kao ulaze kao što je pokazano u\ \citep{surinta2015}. Naved
 znakova i brojeva koristeći metodu lokalnih gradijenata na tri različita pisma: Latiničnom, Tajlandskom i Bengalskom.
 Rad opisuje dva pristupa računanju lokalnih gradijenata: prvi pristup koristi histogram orijentiranih gradijenata
 (\emph{HOG}) dok drugi pristup koristi transformaciju značajki koja ne ovisi o veličini (\emph{SIFT}\footnote{
-\emph{Engl. scale invariant feature transform.}}).\\
+Engl. \emph{scale invariant feature transform.}}).\\
 Kod pristupa \emph{HOG}, ulazne značajke definiraju se kao distribucija intenziteta lokalno orijentiranih gradijenata
 slike koji se računaju za male povezane regije. Za svaki piksel slike računaju se sljedeće vrijednosti:\\
 \begin{equation*}
@@ -211,7 +211,7 @@ koji dalje vjerojatnosnu vrijednost klasifikacije te se odabire najvjerojatniji 
 intenziteti ulaznih piksela modeliraju se kao kombinacija $K$ nasumičnih procesa. Svaki nasumični proces može se
 smatrati jednim slojem ulazne slike koji sadrži slične vrijednosti intenziteta, te će jedan od njih sadržavati ulazne
 znakove. Rad je testirao dva algoritma za proces segmentacije: \emph{EM}\footnote{Algoritam maksimizacije očekivanja,
-\emph{engl. Expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
+engl. \emph{Expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
 očekivanja.}. Kod \emph{EM} algoritma, kombinacija svih nasumičnih procesa definira se na sljedeći način:\\
 \begin{equation*}
     p(o_s) = \sum_{k = 1}^{K} p(o_s | e_s = k) p(e_s = k) = \sum_{k = 1}^{K} \pi_k p_k(o_s).
