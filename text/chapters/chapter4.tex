@@ -95,10 +95,11 @@ grupa, implementirani algoritam segmentacije podešava skup glavnih grupa na slj
     na pola po širini. Time se dobivaju dvije nove grupe piksela koje se dodaju u skup glavnih grupa koji tada sadrži
     ukupno 10 grupa.
     \item Ako je pronađeno 8 glavnih grupa, dvije glavne grupe najveće širine uklanjaju se iz skupa glavnih grupa.
-    Zatim se uspoređuje omjer širina najšire i druge najšire uklonjene grupe. Ako je taj omjer veći ili jednak $1,33$,
+    Zatim se uspoređuje omjer širina najšire i druge najšire uklonjene grupe. Ako je taj omjer veći ili jednak $1{,}33$,
     najšira grupa dijeli se na tri jednaka dijela po širini te se tako dobivene grupe uz preostalu grupu dodaju u skup
-    glavnih grupa. S druge strane, ako je omjer širina manji od $1,33$ obje uklonjene grupe dijele se na pola po širini
-    te se novonastale grupe dodaju u skup glavnih grupa. U oba slučaja, skup glavnih grupa sadržavat će ukupno 10 grupa.
+    glavnih grupa. S druge strane, ako je omjer širina manji od $1{,}33$ obje uklonjene grupe dijele se na pola po
+    širini te se novonastale grupe dodaju u skup glavnih grupa. U oba slučaja, skup glavnih grupa sadržavat će ukupno
+    10 grupa.
     \item Ako je pronađeno 7 ili manje glavnih grupa, tada se $10 - n$ najširih grupa dijeli na pola po širini, gdje je
     $n$ broj pronađenih glavnih grupa.
 \end{enumerate}
@@ -304,7 +305,7 @@ slika\ \ref{fig:prepare-diagram} prikazuje blok-dijagram implementacije te funkc
 Od sve 4 dostupne funkcije, funkcija \texttt{train} je najkompleksnija i nudi najveći opseg različitih opcija pri
 pokretanju. Zadatak ove funkcije je učitati sirove slike ili tekstualne značajke slika te koristeći njih trenirati
 novu ili postojeću neuronsku mrežu. Kod stvaranja nove neuronske mreže, težinski faktori bit će inicijalizirani na
-nasumične vrijednosti u rasponu $[-0,4, 0,4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $36$, izlazni
+nasumične vrijednosti u rasponu $[-0{,}4, 0{,}4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $36$, izlazni
 sloj veličine $10$, te proizvoljan broj i dimenzije skrivenih slojeva. Argumenti koji određuju hoće li se koristiti
 slike ili tekstualne značajke te hoće li se trenirati nova ili postojeća mreža opisani su u
 tablici\ \ref{tab:train-args-1}.
