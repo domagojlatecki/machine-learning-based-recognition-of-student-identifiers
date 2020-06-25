@@ -1,3 +1,150 @@
 \chapter{Implementacija neuronske mreže i gradijentnog spusta u programskom jeziku \emph{Scala}}
 \label{ch:implementacija-neuronske-mreze-i-gradijentnog-spusta-u-programskom-jeziku-scala}
-Implementacija neuronske mreže i gradijentnog spusta u programskom jeziku Scala % TODO
+Programski jezik \emph{Scala} nudi bogate mogućnosti sa strane provjeravanja tipova podataka u strukturi programskog
+kôda. U ovom radu korištena je inačica $2.13.2$ programskog jezika \emph{Scala} u kojoj su uvedeni
+doslovni\footnote{Engleski naziv korišten u dokumentaciji programskog jezika \emph{Scala} za ovakve tipove je
+\emph{``literal singleton type''}.} tipovi za \texttt{Boolean}, \texttt{Byte}, \texttt{Short}, \texttt{Int},
+\texttt{Long}, \texttt{Float}, \texttt{Double}, \texttt{Char} i \texttt{String}. Na primjer, moguće je definirati neku
+varijablu \texttt{a} doslovnog tipa \texttt{10} koji je podtip tipa \texttt{Int} na sljedeći način:
+\begin{lstlisting}[language=scala,label={lst:lstlisting}]
+    var a: 10 = 10
+\end{lstlisting}
+Tada varijabla \texttt{a} može poprimiti samo vrijednost $10$. Na prvi pogled ovakvi tipovi nemaju neku korist kod
+pisanja programskog kôda. Međutim, primjenom ovakvih tipova moguće je složiti strukturu razreda i objekata koja povećava
+tipsku sigurnost te omogućuje pronalazak određenih grešaka za vrijeme prevođenja kôda umjesto za vrijeme izvršavanja
+programa. U ovom radu takvi tipovi korišteni su kako bi se složila struktura razreda neuronske mreže i gradijentnog
+spusta koji osiguravaju da dimenzija pojedinih slojeva neuronske mreže nikada neće imati nekompatibilne dimenzije ulaza
+i izlaza. Kako bi se to postiglo prvo je implementiran razred koji predstavlja polje proizvoljnog tipa objekata čija ja
+dimenzija poznata za vrijeme prevođenja kôda. Taj razred je nazvan \texttt{Vec} te je deklariran na sljedeći način:
+\begin{lstlisting}[language=scala,label={lst:lstlisting2}]
+    final class Vec[+A, S <: Int]
+\end{lstlisting}
+Ova deklaracija navodi dva tipska argumenta:
+\begin{enumerate}
+    \item Argument \texttt{A} koji određuje tip elementa polja.
+    \item Argument \texttt{S} koji određuje veličinu polja elemenata.
+\end{enumerate}
+Na primjer, polje koje sadrži $10$ elemenata tipa \texttt{Double} imalo bi sljedeći tip:
+\begin{lstlisting}[language=scala,label={lst:lstlisting3}]
+  val polje: Vec[Double, 10] = ...
+\end{lstlisting}
+Na ovaj način je već osigurano da neki dio programskog kôda koji očekuje polje duljine $S$ može uvijek očekivati polje
+točno duljine $S$. Dodatno, razred \texttt{Vec} nudi metode kojima se na siguran način mogu dohvatiti elementi polja
+bez mogućnosti specificiranja indeksa koji se nalazi izvan granica polja. Te metode su sljedeće:
+\begin{lstlisting}[language=scala,label={lst:lstlisting4}]
+  def apply(Idx[S]): A
+  def length: S
+  def indices: Indices[S]
+\end{lstlisting}
+
+\section*{Implementacija neuronske mreže}
+Neuronska\hfill{}mreža\hfill{}modelirana\hfill{}je\hfill{}koristeći\hfill{}razrede\hfill{}\texttt{Neuron},\hfill{}
+\texttt{Layer}\hfill{}te\hfill{}sučelje\\
+\texttt{NeuralNetwork}. Razred \texttt{Neuron} sastoji se od sastoji se od težina $w$ koje su pohranjene koristeći
+razred \texttt{Vec}. Težina $w_0$ spremljena zasebno jer onda ne utječe na ulaznu dimenziju neurona. Dio programskog
+kôda kojim je razred \texttt{Neuron} definiran je sljedeći:
+\begin{lstlisting}[language=scala,label={lst:lstlisting5}]
+  final case class Neuron[In <: Int](
+    w:  Vec[Double, In],
+    w0: Double
+  ) {
+    def out(in: Vec[Double, In]): Double = ...
+  }
+\end{lstlisting}
+Ovakvom definicijom neurona postiže se ograničenje da njegov ulaz može biti samo polje brojeva dimenzije \texttt{In}.
+Razred \texttt{Layer} definira se koristeći razred \texttt{Neuron} na sljedeći način:
+\begin{lstlisting}[language=scala,label={lst:lstlisting6}]
+  final case class Layer[In <: Int, Out <: Int](
+    neurons: Vec[Neuron[In], Out]
+  ) {
+    def out(in: Vec[Double, In]): Vec[Double, Out] = ...
+  }
+\end{lstlisting}
+Tako razred \texttt{Layer} također ima ograničenje da njegov ulaz može biti samo polje brojeva dimenzije \texttt{In},
+dok će izlaz metode \texttt{out} uvijek biti polje brojeva dimenzije \texttt{Out}. Sučelje \texttt{NeuralNetwork}
+implementiraju dva razreda: razred \texttt{LastLayer} i \texttt{ForwardPass}. Time je neuronska mreža građena kao
+ulančana lista. Razred \texttt{LastLayer} označava zadnji sloj mreže dok razred \texttt{ForwardPass} služi za ulazni
+sloj i skrivene slojeve mreže. Sučelje neuronske mreže definirano je tako da pruža informaciju o broju ulaza i izlaza
+mreže. Neuronsku mrežu moguće je izgraditi samo od slojeva koji imaju međusobno kompatibilne dimenzije ulaznih i
+izlaznih slojeva. Ovo ograničenje bit će provjereno od strane prevoditelja programskog kôda, tako da nije moguće
+prevesti program koji sadrži neuronsku mrežu sa slojevima nekompatibilnih dimenzija. Definicija sučelja
+\texttt{NeuralNetwork} te razreda \texttt{LastLayer} i \texttt{ForwardPass} navedena je u nastavku.
+\begin{lstlisting}[language=scala,label={lst:lstlisting7}]
+  sealed trait NeuralNetwork[In <: Int, Out <: Int] {
+    final def out(in: Vec[Double, In]): Vec[Double, Out] = ...
+  }
+
+  object NeuralNetwork {
+    final case class LastLayer[In <: Int, Out <: Int](
+      layer: Layer[In, Out]
+    ) extends NeuralNetwork[In, Out]
+
+    final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](
+      first: Layer[In, Mid],
+      rest:  NeuralNetwork[Mid, Out]
+    ) extends NeuralNetwork[In, Out]
+  }
+\end{lstlisting}
+
+\section*{Implementacija gradijentnog spusta}
+Gradijentni spust implementiran je koristeći već prethodno opisane strukture podataka kako bi se osigurala ispravnost
+korištenih dimenzija polja pri postupku računanja gradijenata. Uz ulazne i izlazne dimenzije neuronske mreže algoritam
+gradijentnog spusta također dobiva informaciju o broju uzoraka za učenje i ispitivanje. Potpuna definicija metode kojom
+se provodi gradijentni spust je:
+\tiny
+\begin{lstlisting}[language=scala,label={lst:lstlisting8}]
+  def optimize[In <: Int, Out <: Int, N1 <: Int, N2 <: Int](
+    nn: NeuralNetwork[In, Out]
+  )(
+    trainSamples:          Vec[Sample[In, Out], N1],
+    testSamples:           Option[Vec[Sample[In, Out], N2]],
+    testMovingAverageSize: Option[Int],
+    step:                  Double,
+    inertia:               Double,
+    batchSize:             BatchSize,
+    maxIters:              Int,
+    targetError:           Double
+  )(implicit par: Parallel): Result[In, Out] = ...
+\end{lstlisting}
+\normalsize
+Prilikom izračuna gradijenata tipovi \texttt{In}, \texttt{Out}, \texttt{N1} i \texttt{N2} koriste se kako bi se
+osigurala dimenzijska ispravnost. Jedan primjer toga je način na koji se računaju izlazi neuronske mreže nad kojom se
+provodi postupak gradijentnog spusta. Svi slojevi neuronske mreže garantirano imaju kompatibilne dimenzije ulaza i
+izlaza, pa se prolaz kroz neuronsku mrežu može obaviti koristeći rekurziju:
+\tiny
+\begin{lstlisting}[language=scala,label={lst:lstlisting9}]
+  @tailrec
+  def loop[FI <: Int, I <: Int](
+    n:   AccGrads[I, Out],
+    ins: Vec[Vec[Double, I], N],
+    acc: NeuralNetworkData[FI, I, N]
+  ): NeuralNetworkData[FI, Out, N] = n match {
+
+      case ForwardPass(first, rest) =>
+        val outs = ins.parMap(first.out)
+        loop(rest, outs, BackwardPassData(
+            LayerData(
+              first.layer.neurons,
+              ins,
+              outs,
+              first.accGrads
+            ),
+            acc
+          )
+        )
+
+      case LastLayer(lg) =>
+        BackwardPassData(LayerData(
+            lg.layer.neurons,
+            ins,
+            ins.parMap(lg.layer.out),
+            lg.accGrads
+          ),
+          acc
+        )
+    }
+\end{lstlisting}
+\normalsize
+Navedeni rekurzivni prolaz kroz mrežu gradi strukturu podataka u kojoj su spremljeni svi izlazi mreže i gradijenti
+težina iz prethodnog koraka algoritma gradijentnog spusta. Kod ovakve implementacije nije moguće slučajno koristiti neki
+niz brojeva na mjestu gdje on nije očekivan jer će za svaki niz biti provjerena njegova dimenzija.
