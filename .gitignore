@@ -1,3 +1,6 @@
+# Bloop project files
+.bloop
+
 # IntelliJ project files
 .idea
 .idea_modules
@@ -20,6 +23,7 @@ text/*.pdf
 *.out
 *.toc
 *.synctex.gz
+*(busy)
 
 # OS X
 .DS_Store

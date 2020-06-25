@@ -1,4 +1,4 @@
-package at.doml.thesis.training
+package at.doml.thesis.recognition
 
 import java.nio.file.Path
 import at.doml.thesis.grad.BatchSize

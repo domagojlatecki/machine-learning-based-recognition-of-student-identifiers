@@ -1,7 +1,7 @@
-package at.doml.thesis.training
+package at.doml.thesis.recognition
 
 import java.awt.image.BufferedImage
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 import at.doml.thesis.preprocessing.debug.CanvasDebugger
 import at.doml.thesis.preprocessing.image.Canvas
 import javax.imageio.ImageIO

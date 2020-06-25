@@ -1,4 +1,4 @@
-package at.doml.thesis.training
+package at.doml.thesis.recognition
 
 sealed abstract class Error(msg: String) extends RuntimeException(msg) with Product with Serializable {
   override def toString: String = msg

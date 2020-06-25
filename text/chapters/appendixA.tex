@@ -1,3 +1,54 @@
 \chapter{Opis strukture projekta i korištenih programskih alata}
 \label{ch:opis-strukture-projekta-i-koristenih-programskih-alata}
-Opis strukture projekta i korištenih programskih alata % TODO
+Programski kôd sustava za raspoznavanje implementiranog u ovom radu pisan je u programskom jeziku \emph{Scala} koristeći
+relativno nov alat za definiranje i upravljanje modulima pod nazivom \emph{Mill}. Taj alat omogućuje definiranje modula
+i pokretanje izgradnje programskog kôda preko definicije koja je također pisana u programskom jeziku \emph{Scala}. Time
+se izbjegava potreba za korištenjem zasebnog jezika za definiranje strukture projekta. Izvorni kôd alata \emph{Mill}
+dostupan je preko \emph{GitHub}-a na sljedećoj \emph{web} adresi:\\
+\url{https://github.com/lihaoyi/mill}\\
+Dokumentacija alata \emph{Mill} dostupna je na sljedećoj \emph{web} adresi:\\
+\url{http://www.lihaoyi.com/mill/}\\
+Implementirani sustav za raspoznavanje znamenaka sastoji se od sljedećih programskih modula:
+\begin{enumerate}
+    \item Modul \texttt{util} koji sadrži dijeljene komponente koje su korištene u ostalim modulima.
+    \item Modul \texttt{neural-network} koji sadrži implementaciju neuronske mreže.
+    \item Modul \texttt{gradient-descent} koji sadrži implementaciju gradijentnog spusta.
+    \item Modul \texttt{preprocessing} koji sadrži implementaciju koraka pretprocesiranja i segmentacije.
+    \item Modul \texttt{recognition} koji povezuje sve navedene module u sustav za raspoznavanje koji nudi mogućnost
+    pretprocesiranja slika, učenja i testiranja neuronske mreže te mogućnost raspoznavanja slika.
+\end{enumerate}
+Definicija ovih modula nalazi se u datoteci \texttt{build.sc}. Korijenski direktorij svakog od modula je
+\texttt{modules/<ime modula>} dok se programski kôd modula nalazi u poddirektoriju \texttt{main/scala}. Testovi za
+pojedine module nalaze se u poddirektorijima \texttt{test/scala} i \texttt{integration/scala}. Radi jednostavnijeg
+korištenja alata \emph{Mill}, u korijenskom direktoriju projekta nalazi se \emph{Bash} skripta pod nazivom \texttt{mill}
+čijim se pozivanjem automatski instalira verzija alata \emph{Mill} definirana u datoteci \texttt{.mill-version}. Kako bi
+se dobila struktura projekta koja se može uvesti u integriranu razvojnu okolinu \emph{IntelliJ Idea} navedena skripta
+može se pozvati na sljedeći način: \texttt{./mill init}. Izgradnja svih modula može se pokrenuti pozivom naredbe
+\texttt{./mill compile}. Dodatno, ako je postavljena varijabla okoline \texttt{OPT\_BUILD} prilikom pokretanja izgradnje
+modula tada će se pokrenuti izgradnja kôda koristeći sve moguće optimizacije za vrijeme prevođenja kôda. \emph{Bash}
+skripta \texttt{opt.sh} nudi mogućnost izgradnje projekta koristeći spomenute optimizacije. Pokretanjem naredbe
+\texttt{./mill recognition.launcher} bit će izgrađen cijeli projekt te će biti dostupna \emph{Bash} skripta čijim se
+pokretanjem može pokrenuti implementirani sustav. Ta će skripta biti dostupna na lokaciji
+\texttt{out/recognition/launcher/dest/run}. \emph{Jar} arhiva koja sadrži sav prevedeni programski kôd može se dobiti
+pozivanjem naredbe \texttt{./mill recognition.assembly} nakon čega će ta arhiva biti dostupna na lokaciji
+\texttt{out/recognition/assembly/dest/out.jar}. Tako izgrađena \emph{jar} arhiva sadrži sve potrebne komponente za
+zasebno pokretanje korištenjem naredbe \texttt{java -jar}, bez potrebe za instalacijom programskog jezika \emph{Scala}.
+Za automatsko formatiranje programskog kôda korišten je alat \emph{Scalafmt} čija je konfiguracija navedena u datoteci
+\texttt{.scalafmt.conf}. Dokumentacija alata \texttt{Scalafmt} dostupna je na:
+\url{https://scalameta.org/scalafmt/docs/installation.html} dok je njegov izvorni kôd dostupan na:
+\url{https://github.com/scalameta/scalafmt}. Skripta \texttt{prepare.sh} služi za pripremu slika za postupak učenja.
+Prije pokretanja te skripte pretpostavljeno je da postoje slike u direktoriju \texttt{data/images} koji nadanje sadrži
+sljedeću strukturu poddirektorija: \texttt{<skup slika>/train/} i \texttt{<skup slika>/test} u kojima se nalaze pojedine
+slike. Na primjer, za jedan skup slika pod nazivom ``skup-1'' struktura direktorija izgledala bi ovako:\\
+\texttt{data/images/skup-1/train}\\
+\texttt{data/images/skup-1/test}\\
+Prije pokretanja navedene skripte programski kôd mora biti izgrađen koristeći naredbu
+\texttt{./mill recognition.launcher} te također moraju postojati direktoriji \texttt{data/features/train}\hfill{}i
+\hfill{}\texttt{data/features/test}.\hfill{}Skripte\hfill{}\texttt{train.sh}\hfill{}i\\
+\texttt{test.sh} služe za učenje i testiranje neuronskih mreža koristeći pripremljene podatke. Pritom se pri pokretanju
+skripte \texttt{train.sh} stvaraju nove neuronske mreže koje se spremaju u direktorij \texttt{data} koji mora postojati
+prije pokretanja skripte. Postupak učenja moguće je prekinuti u bilo kojem trenutnu, ali se naučene vrijednosti
+neuronske mreže spremaju u datoteku tek nakon što program uspješno dosegne postavljeni broj iteracija. Skripta
+\texttt{test.sh} pokreće ispitivanje točnosti klasifikacije za sve mreže dostupne u direktoriju \texttt{trained-nns}.
+Taj direktorij sadrži neuronske mreže koje su naučene u svrhu analize implementiranog sustava za raspoznavanje
+znamenaka.

@@ -29,8 +29,8 @@ object Preprocessor {
 
     groups.map { groups =>
       val features = groups
-        .mapWithIndex((c, i) => ResizeTransform(c, s"${canvasName}_${i.v}.png"))
-        .mapWithIndex((c, i) => FeaturesTransform(c, s"${canvasName}_${i.v}.png"))
+        .mapWithIndex((c, i) => ResizeTransform(c, s"${canvasName}_${i.v}"))
+        .mapWithIndex((c, i) => FeaturesTransform(c, s"${canvasName}_${i.v}"))
 
       labels match {
         case None     => features.mapWithIndex((fs, index) => Data.Raw(fs, canvasName, index.v))

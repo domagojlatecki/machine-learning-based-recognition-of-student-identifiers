@@ -15,7 +15,7 @@ private object Versions {
   val Scala = "2.13.2"
   val ScoverageVersion = "1.4.1"
   // Dependencies
-  val ScalaTest = "3.1.1"
+  val ScalaTest = "3.2.0"
   val ScalaMock = "4.4.0"
 }
 
@@ -197,9 +197,9 @@ object `gradient-descent` extends ScalaModule {
   override def moduleDeps = Seq(`neural-network`)
 }
 
-object training extends ScalaModule {
+object recognition extends ScalaModule {
   override def moduleDeps = Seq(preprocessing, `gradient-descent`)
-  override def mainClass = T { Some("at.doml.thesis.training.Main") }
+  override def mainClass = T { Some("at.doml.thesis.recognition.Main") }
 }
 
 private val allModules = Seq[ScalaModule](
@@ -207,7 +207,7 @@ private val allModules = Seq[ScalaModule](
   preprocessing,
   `neural-network`,
   `gradient-descent`,
-  training
+  recognition
 )
 
 /* * * * *

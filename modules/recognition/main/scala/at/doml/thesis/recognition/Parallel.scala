@@ -1,4 +1,4 @@
-package at.doml.thesis.training
+package at.doml.thesis.recognition
 
 import java.util.concurrent.Executors
 import at.doml.thesis.util.par.Parallel

@@ -1,9 +1,9 @@
-package at.doml.thesis.training
+package at.doml.thesis.recognition
 
 import java.nio.file.{Path, Paths}
 import at.doml.thesis.grad.BatchSize
-import at.doml.thesis.training.Command._
-import at.doml.thesis.training.Error.!
+import at.doml.thesis.recognition.Command._
+import at.doml.thesis.recognition.Error.!
 import scala.annotation.tailrec
 
 // TODO refactor this
