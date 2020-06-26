@@ -16,8 +16,8 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
 
   def parMap[B : ClassTag](f: A => B)(implicit par: Parallel): Vec[B, S] = {
     val out = new Array[B](length)
-    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices =>
-      () => {
+    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices => () =>
+      {
         for (i <- indices) {
           out(i) = f(underlying(i))
         }
@@ -37,8 +37,8 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
 
   def parMapWith[B, C : ClassTag](that: Vec[B, S])(f: (A, B) => C)(implicit par: Parallel): Vec[C, S] = {
     val out = new Array[C](length)
-    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices =>
-      () => {
+    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices => () =>
+      {
         for (i <- indices) {
           out(i) = f(underlying(i), that.underlying(i))
         }
@@ -55,8 +55,8 @@ final class Vec[+A, S <: Int] private[util] (val underlying: ArraySeq[A]) extend
 
   def parMapWithIndex[B : ClassTag](f: (A, Idx[S]) => B)(implicit par: Parallel): Vec[B, S] = {
     val out = new Array[B](length)
-    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices =>
-      () => {
+    val tasks = underlying.indices.grouped(par.itemsPerThread).map { indices => () =>
+      {
         for (i <- indices) {
           out(i) = f(underlying(i), Idx(i))
         }

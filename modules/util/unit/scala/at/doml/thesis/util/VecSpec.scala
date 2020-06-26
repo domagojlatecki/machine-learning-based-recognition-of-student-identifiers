@@ -10,9 +10,9 @@ import scala.collection.mutable.ListBuffer
 class VecSpec extends AnyFreeSpec with should.Matchers {
 
   private implicit object TestParallel extends Parallel {
-    override def itemsPerThread: Int = Int.MaxValue
+    override def itemsPerThread: Int                           = Int.MaxValue
     override def execute[A](tasks: Iterator[() => A]): List[A] = tasks.map(_.apply()).toList
-    override def shutdown(): Unit = ()
+    override def shutdown(): Unit                              = ()
   }
 
   "A Vec" - {
@@ -21,7 +21,7 @@ class VecSpec extends AnyFreeSpec with should.Matchers {
 
       "should have length 0" - {
 
-        "[using Vec.empty]" in  {
+        "[using Vec.empty]" in {
           Vec.empty[Int].length shouldBe 0
         }
 
@@ -36,7 +36,7 @@ class VecSpec extends AnyFreeSpec with should.Matchers {
 
       "should return correct indices" - {
 
-        "[using Vec.empty]" in  {
+        "[using Vec.empty]" in {
           Vec.empty[Int].indices.underlying shouldBe (0 until 0)
         }
 
@@ -204,12 +204,14 @@ class VecSpec extends AnyFreeSpec with should.Matchers {
       "should correctly map with index" - {
 
         "[using mapWithIndex]" in {
-          Vec.unsafeWrap[Int, 5](ArraySeq(-1, -2, -3, -4, -5))
+          Vec
+            .unsafeWrap[Int, 5](ArraySeq(-1, -2, -3, -4, -5))
             .mapWithIndex(_.toString + _.v.toString).underlying shouldBe ArraySeq("-10", "-21", "-32", "-43", "-54")
         }
 
         "[using parMapWithIndex]" in {
-          Vec.unsafeWrap[Int, 5](ArraySeq(-1, -2, -3, -4, -5))
+          Vec
+            .unsafeWrap[Int, 5](ArraySeq(-1, -2, -3, -4, -5))
             .parMapWithIndex(_.toString + _.v.toString).underlying shouldBe ArraySeq("-10", "-21", "-32", "-43", "-54")
         }
       }
@@ -217,7 +219,16 @@ class VecSpec extends AnyFreeSpec with should.Matchers {
       "should correctly return minimum value" in {
         val vec = Vec.unsafeWrap(
           ArraySeq(
-            (-1, "a"), (-2, "b"), (-3, "c"), (-4, "d"), (-5, "e"), (0, "f"), (1, "g"), (2, "h"), (3, "i"), (4, "j")
+            (-1, "a"),
+            (-2, "b"),
+            (-3, "c"),
+            (-4, "d"),
+            (-5, "e"),
+            (0, "f"),
+            (1, "g"),
+            (2, "h"),
+            (3, "i"),
+            (4, "j")
           )
         )
 
@@ -228,7 +239,16 @@ class VecSpec extends AnyFreeSpec with should.Matchers {
       "should correctly return maximum value" in {
         val vec = Vec.unsafeWrap(
           ArraySeq(
-            (-1, "j"), (-2, "i"), (-3, "h"), (-4, "g"), (-5, "f"), (0, "e"), (1, "d"), (2, "c"), (3, "b"), (4, "a")
+            (-1, "j"),
+            (-2, "i"),
+            (-3, "h"),
+            (-4, "g"),
+            (-5, "f"),
+            (0, "e"),
+            (1, "d"),
+            (2, "c"),
+            (3, "b"),
+            (4, "a")
           )
         )
 
