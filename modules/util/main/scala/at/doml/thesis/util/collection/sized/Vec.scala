@@ -82,6 +82,4 @@ object Vec {
   def unsafeWrap[A, S <: Int](a: ArraySeq[A]): Vec[A, S] = new Vec(a)
 
   def fill[A : ClassTag](n: Int)(elem: => A): Vec[A, n.type] = new Vec(ArraySeq.fill(n)(elem))
-
-  def tabulate[A : ClassTag](n: Int)(f: Int => A): Vec[A, n.type] = new Vec(ArraySeq.tabulate(n)(f))
 }
