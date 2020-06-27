@@ -7,7 +7,7 @@ import org.scalatest.matchers.should
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable.ListBuffer
 
-class VecSpec extends AnyFreeSpec with should.Matchers {
+final class VecSpec extends AnyFreeSpec with should.Matchers {
 
   private implicit object TestParallel extends Parallel {
     override def itemsPerThread: Int                           = Int.MaxValue

@@ -6,7 +6,7 @@ import org.scalatest.matchers.should
 import scala.collection.immutable.ArraySeq
 import scala.collection.mutable.ListBuffer
 
-class IndicesSpec extends AnyFreeSpec with should.Matchers {
+final class IndicesSpec extends AnyFreeSpec with should.Matchers {
 
   "Indices" - {
 
