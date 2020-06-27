@@ -606,7 +606,7 @@ object ArgumentParser {
     }
   }
 
-  private object AnalyzeCommandParser extends CommandParser {
+  private object ApplyCommandParser extends CommandParser {
 
     sealed trait State extends Product with Serializable
 
@@ -615,27 +615,37 @@ object ArgumentParser {
     }
 
     object State {
-      case object Init     extends State
-      case object Features extends Arg("--features", "Root of features dataset", "dir")
+      case object Init            extends State
+      case object Images          extends Arg("--images", "Root of image dataset, exclusive with --features", "dir")
+      case object NumbersPerImage extends Arg("--n-per-image", "Amount of numbers in each image, default: 10", "int")
+      case object NetworkPaths    extends Arg(
+        "--nn-paths",
+        "Path to neural network files, must be the last argument",
+        "file [file...]"
+      )
     }
 
     final case class ArgsBuilder(
-      featuresPath: Option[Path] = None
+      imagesPath:         Option[Path] = None,
+      numbersPerImage:    Int          = 10,
+      neuralNetworkPaths: List[Path]   = Nil
     )
 
     type S = State
     type NS = Arg
     type Acc = ArgsBuilder
 
-    val commandName: String = "analyze"
+    val commandName: String = "apply"
 
     val namedStates: List[Arg] = List(
-      State.Features
+      State.Images,
+      State.NumbersPerImage,
+      State.NetworkPaths
     )
 
     val initState: State = State.Init
 
-    val endStates: Set[State] = Set(initState)
+    val endStates: Set[State] = Set(initState, State.NetworkPaths)
 
     val emptyAcc: ArgsBuilder = ArgsBuilder()
 
@@ -644,33 +654,57 @@ object ArgumentParser {
 
         case State.Init =>
           namedStates.find(_.name == arg) match {
-            case Some(nextState) => Right((nextState, acc))
-            case None            => Left(UnknownArgumentError(arg))
+            case Some(nextState)            => Right((nextState, acc))
+            case None                       => Left(UnknownArgumentError(arg))
           }
 
-        case State.Features =>
+        case State.Images =>
           val path = Paths.get(arg)
 
           if (path.toFile.isDirectory) {
-            Right((State.Init, acc.copy(featuresPath = Some(path))))
+            Right((State.Init, acc.copy(imagesPath = Some(path))))
+          } else {
+            Left(IllegalArgumentError(arg))
+          }
+
+        case State.NumbersPerImage =>
+          arg.toIntOption match {
+            case Some(v) if v > 0 => Right((State.Init, acc.copy(numbersPerImage = v)))
+            case Some(_)          => Left(IllegalArgumentError(arg))
+            case None             => Left(NumberParseError(arg))
+          }
+
+        case State.NetworkPaths =>
+          val path = Paths.get(arg)
+
+          if (path.toFile.isFile) {
+            Right((State.NetworkPaths, acc.copy(neuralNetworkPaths = path :: acc.neuralNetworkPaths)))
           } else {
             Left(IllegalArgumentError(arg))
           }
       }
     }
 
-    def buildArgs(acc: ArgsBuilder): ![Command.Analyze] = {
+    def buildArgs(acc: ArgsBuilder): ![Command.Apply] = {
 
-      acc.featuresPath match {
-        case Some(featuresPath) =>
+      (acc.imagesPath, acc.neuralNetworkPaths) match {
+        case (Some(imagesPath), first :: rest) =>
           Right(
-            Command.Analyze(
-              featuresPath = featuresPath
+            Command.Apply(
+              imagesPath        = imagesPath,
+              numbersPerImage   = acc.numbersPerImage,
+              neuralNetworkPaths = first :: rest
             )
           )
 
-        case None =>
-          Left(MissingArgumentError("--features"))
+        case (Some(_), Nil) =>
+          Left(MissingArgumentError("--nn-paths"))
+
+        case (None, _ :: _) =>
+          Left(MissingArgumentError("--images"))
+
+        case (None, Nil) =>
+          Left(MissingArgumentError("--images, --nn-paths"))
       }
     }
   }
@@ -678,12 +712,12 @@ object ArgumentParser {
   def parse(arguments: List[String]): ![Command] = {
     def helpMessage: String =
       s"""Usage: command [arguments...]
-         |Available commands: train, test, prepare, analyze
+         |Available commands: prepare, train, test, apply
          |
+         |${PrepareCommandParser.helpMessage}
          |${TrainCommandParser.helpMessage}
          |${TestCommandParser.helpMessage}
-         |${PrepareCommandParser.helpMessage}
-         |${AnalyzeCommandParser.helpMessage}
+         |${ApplyCommandParser.helpMessage}
          |""".stripMargin
 
     arguments match {
@@ -693,10 +727,10 @@ object ArgumentParser {
 
       case command :: args =>
         command match {
+          case "prepare" => PrepareCommandParser.parseArgs(args)
           case "train"   => TrainCommandParser.parseArgs(args)
           case "test"    => TestCommandParser.parseArgs(args)
-          case "prepare" => PrepareCommandParser.parseArgs(args)
-          case "analyze" => AnalyzeCommandParser.parseArgs(args)
+          case "apply"   => ApplyCommandParser.parseArgs(args)
           case _         => Left(UnknownCommandError(command))
         }
     }

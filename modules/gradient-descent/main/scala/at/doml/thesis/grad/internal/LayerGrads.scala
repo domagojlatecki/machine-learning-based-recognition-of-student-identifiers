@@ -1,6 +1,6 @@
 package at.doml.thesis.grad.internal
 
-import at.doml.thesis.nn.{Layer, Neuron}
+import at.doml.thesis.nn.Layer
 import at.doml.thesis.util.collection.sized.Vec
 
 private[grad] final case class LayerGrads[In <: Int, Out <: Int](

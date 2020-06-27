@@ -317,6 +317,26 @@ object Main {
     }
   }
 
+  private def prepare(args: Command.Prepare): ![Unit] = {
+    val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
+
+    loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, debugger).map { labeledData =>
+      labeledData.map {
+
+        case Data.Raw(features, file, index)            =>
+          features.underlying.mkString(s"{label=none;file=$file;index=$index;(", ",", ";)}")
+
+        case Data.Labeled(features, label, file, index) =>
+          features.underlying.mkString(s"{label=$label;file=$file;index=$index;(", ",", ";)}")
+      }
+    }.flatMap { serializedData =>
+      Try(Files.write(args.outputFile, serializedData.underlying.asJava, StandardCharsets.UTF_8)) match {
+        case Failure(_) => Left(CannotWriteFileError(args.outputFile.toFile.toString))
+        case _          => Right(())
+      }
+    }
+  }
+
   private def train(args: Command.Train): ![Unit] = {
 
     def convertToSamples(data: Vec[Data, Int]): Vec[Sample[In, 10], Int] = {
@@ -425,34 +445,37 @@ object Main {
     } yield ()
   }
 
+  private def loadNeuralNetworks(paths: List[Path]): ![List[NeuralNetwork[In, 10]]] = {
+    val init: ![List[NeuralNetwork[In, 10]]] = Right(Nil)
+
+    paths.foldLeft(init) { (err, path) =>
+      err.flatMap(loaded => loadNeuralNetwork(path).map(_ :: loaded))
+    }
+  }
+
+  private final case class FlatData(features: Vec[Double, In], label: Option[Int], file: String, index: Int)
+
+  private final case class Outputs(outs: Vec[Double, 10], label: Option[Int], file: String, index: Int)
+
+  private final case class Prediction(prediction: Int, label: Option[Int], file: String, index: Int)
+
+  private def flattenData(data: Vec[Data, Int]): Vec[FlatData, Int] = {
+    data.map { d =>
+      val label = d match {
+        case Data.Labeled(_, l, _, _) => Some(l)
+        case Data.Raw(_, _, _)        => None
+      }
+
+      FlatData(
+        d.features,
+        label,
+        d.file,
+        d.index
+      )
+    }
+  }
+
   private def test(args: Command.Test): ![Unit] = {
-    final case class FlatData(features: Vec[Double, In], label: Option[Int], file: String, index: Int)
-    final case class Outputs(outs: Vec[Double, 10], label: Option[Int], file: String, index: Int)
-    final case class Prediction(prediction: Int, label: Option[Int], file: String, index: Int)
-
-    def flattenData(data: Vec[Data, Int]): Vec[FlatData, Int] = {
-      data.map { d =>
-        val label = d match {
-          case Data.Labeled(_, l, _, _) => Some(l)
-          case Data.Raw(_, _, _)        => None
-        }
-
-        FlatData(
-          d.features,
-          label,
-          d.file,
-          d.index
-        )
-      }
-    }
-
-    def loadNeuralNetworks(paths: List[Path]): ![List[NeuralNetwork[In, 10]]] = {
-      val init: ![List[NeuralNetwork[In, 10]]] = Right(Nil)
-
-      paths.foldLeft(init) { (err, path) =>
-        err.flatMap(loaded => loadNeuralNetwork(path).map(_ :: loaded))
-      }
-    }
 
     def printAccuracy(nns: List[NeuralNetwork[In, 10]], data: Vec[FlatData, Int]): Unit = {
       val allOuts = nns.map(nn => data.map(d => Outputs(nn.out(d.features), d.label, d.file, d.index)))
@@ -535,97 +558,35 @@ object Main {
     } yield printAccuracy(nns, flatData)
   }
 
-  private def prepare(args: Command.Prepare): ![Unit] = {
-    val debugger = args.debugRoot.map(new FileCanvasDebugger(_)).getOrElse(CanvasDebugger.NoOp)
+  private def apply(args: Command.Apply): ![Unit] = {
 
-    loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, debugger).map { labeledData =>
-      labeledData.map {
-
-        case Data.Raw(features, file, index)            =>
-          features.underlying.mkString(s"{label=none;file=$file;index=$index;(", ",", ";)}")
-
-        case Data.Labeled(features, label, file, index) =>
-          features.underlying.mkString(s"{label=$label;file=$file;index=$index;(", ",", ";)}")
-      }
-    }.flatMap { serializedData =>
-      Try(Files.write(args.outputFile, serializedData.underlying.asJava, StandardCharsets.UTF_8)) match {
-        case Failure(_) => Left(CannotWriteFileError(args.outputFile.toFile.toString))
-        case _          => Right(())
-      }
-    }
-  }
-
-  private def analyze(args: Command.Analyze): ![Unit] = {
-    final case class Stats(min: Double, max: Double, average: Double, deviation: Double)
-
-    def similarity(v1: Vec[Double, In], v2: Vec[Double, In]): Double = {
-      val dotProduct = v1.mapWith(v2)(_ * _).underlying.sum
-      val v1SquareSum = v1.map(a => a * a).underlying.sum
-      val v2SquareSum = v2.map(a => a * a).underlying.sum
-
-      dotProduct / (math.sqrt(v1SquareSum) * math.sqrt(v2SquareSum))
-    }
-
-    // TODO do not allow empty data
-    loadPreprocessedSamples(args.featuresPath, requireLabels = true).map { labeledData =>
-      val statsByLabel = labeledData.underlying.groupBy { case d: Data.Labeled => d.label }
-        .filter(_._2.nonEmpty)
-        .toList
-        .map { case (label, data) =>
-          val indices = data(0).features.indices
-          val minMaxAverage = for (i <- indices) yield {
-            var sum = 0.0
-            var min = 0.0
-            var max = 0.0
-
-            for (j <- data.indices) {
-              val feature = data(j).features(i)
-
-              min = min min feature
-              max = max max feature
-              sum += feature
-            }
-
-            (min, max, sum / data.length)
-          }
-
-          val stats = minMaxAverage.mapWithIndex { case ((min, max, average), i) =>
-            var sum = 0.0
-
-            for (j <- data.indices) {
-              sum += math.pow(data(j).features(i) - average, 2.0)
-            }
-
-            Stats(min, max, average, sum / (data.length - 1)) // TODO handle edge case
-          }
-
-          (label, stats)
+    def printRecognizedDigits(nns: List[NeuralNetwork[In, 10]], data: Vec[FlatData, Int]): Unit = {
+      val allOuts = nns.map(nn => data.map(d => Outputs(nn.out(d.features), d.label, d.file, d.index)))
+      val combined = allOuts.reduce { (data1, data2) =>
+        data1.mapWith(data2) { (outs1, outs2) =>
+          Outputs(outs1.outs.mapWith(outs2.outs)(_ + _), outs1.label, outs1.file, outs1.index)
         }
-        .sortBy(_._1)
+      }
 
-      statsByLabel.foreach { case (label, stats) =>
-        val similarities = statsByLabel.map { case (otherLabel, otherStats) =>
-          val sim = similarity(stats.map(_.average), otherStats.map(_.average))
-          val same = label == otherLabel
-          val color = if (sim <= 0.9 || same) "\u001B[32m" else if (sim <= 0.95) "\u001B[33m" else "\u001B[31m"
+      val outs = List(combined)
 
-          f"$color[$otherLabel] $sim%.3f\u001B[0m"
+      for (out <- outs) {
+        val predictions = out.map { o =>
+          Prediction(o.outs.mapWithIndex((v, i) => (v, i)).maxBy(_._1)._2.v, o.label, o.file, o.index)
         }
 
-        val features = stats.map { stat =>
-          val percentage = (stat.deviation / stat.average) * 100.0
-          val color = if (percentage <= 1.0) "\u001B[32m" else if (percentage <= 10.0) "\u001B[33m" else "\u001B[31m"
-
-          f"$color${stat.average}%.3f [${stat.min}%.3f - ${stat.max}%.3f] ±" +
-            f" ${stat.deviation}%.3f ($percentage%.2f%%)\u001B[0m"
-        }.underlying
-
-        println(s"[$label]:")
-        println(s"  - similarities: ${similarities.mkString(", ")}")
-        println(s"  - features: ${features.mkString("\n    ", "\n    ", "\n")}")
-        println()
+        predictions.underlying.groupBy(_.file).foreach { case (file, prediction) =>
+          val sorted = prediction.sortBy(_.index).map(_.prediction).mkString("")
+          println(s"$file classified as: $sorted")
+        }
       }
     }
+
+    for {
+      data     <- loadRawSamples(args.imagesPath, args.numbersPerImage, requireLabels = false, CanvasDebugger.NoOp)
+      nns      <- loadNeuralNetworks(args.neuralNetworkPaths)
+      flatData  = flattenData(data)
+    } yield printRecognizedDigits(nns, flatData)
   }
 
   def main(args: Array[String]): Unit = {
@@ -643,10 +604,10 @@ object Main {
     }
 
     val result = command match {
+      case cmd: Command.Prepare => prepare(cmd)
       case cmd: Command.Train   => train(cmd)
       case cmd: Command.Test    => test(cmd)
-      case cmd: Command.Prepare => prepare(cmd)
-      case cmd: Command.Analyze => analyze(cmd) // TODO remove, implement apply (--n-per-image, --nn-paths, --images)
+      case cmd: Command.Apply   => apply(cmd)
     }
 
     result match {

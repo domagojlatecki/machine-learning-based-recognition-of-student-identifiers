@@ -50,7 +50,9 @@ object Command {
     outputFile:      Path
   ) extends Command
 
-  final case class Analyze(
-    featuresPath: Path
+  final case class Apply(
+    imagesPath:         Path,
+    numbersPerImage:    Int,
+    neuralNetworkPaths: List[Path]
   ) extends Command
 }
