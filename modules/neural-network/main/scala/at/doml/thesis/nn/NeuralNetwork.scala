@@ -1,6 +1,6 @@
 package at.doml.thesis.nn
 
-import at.doml.thesis.nn.NeuralNetwork.{ForwardPass, LastLayer}
+import at.doml.thesis.nn.NeuralNetwork.{ ForwardPass, LastLayer }
 import at.doml.thesis.util.collection.sized.Vec
 import scala.annotation.tailrec
 
@@ -22,16 +22,14 @@ object NeuralNetwork {
 
   final case class LastLayer[In <: Int, Out <: Int](layer: Layer[In, Out]) extends NeuralNetwork[In, Out]
 
-  final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](
-    first: Layer[In, Mid],
-    rest:  NeuralNetwork[Mid, Out]
-  ) extends NeuralNetwork[In, Out]
+  final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](first: Layer[In, Mid], rest: NeuralNetwork[Mid, Out])
+    extends NeuralNetwork[In, Out]
 
   def random(
-    inputs:  Int,
-    middle:  List[Int],
+    inputs: Int,
+    middle: List[Int],
     outputs: Int,
-    wRange:  (Double, Double)
+    wRange: (Double, Double)
   ): NeuralNetwork[inputs.type, outputs.type] = {
     type In  = inputs.type
     type Out = outputs.type

@@ -20,8 +20,8 @@ final case class Neuron[In <: Int](w: Vec[Double, In], w0: Double) {
 object Neuron {
 
   def random(size: Int, wRange: (Double, Double)): Neuron[size.type] = {
-    val min = wRange._1 min wRange._2
-    val max = wRange._1 max wRange._2
+    val min  = wRange._1 min wRange._2
+    val max  = wRange._1 max wRange._2
     val diff = max - min
 
     def rand(): Double = max - math.random() * diff
