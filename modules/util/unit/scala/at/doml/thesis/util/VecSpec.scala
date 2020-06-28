@@ -10,9 +10,9 @@ import scala.collection.mutable.ListBuffer
 final class VecSpec extends AnyFreeSpec with should.Matchers {
 
   private implicit object TestParallel extends Parallel {
-    override def itemsPerThread: Int                           = Int.MaxValue
+    override def itemsPerThread: Int = Int.MaxValue
     override def execute[A](tasks: Iterator[() => A]): List[A] = tasks.map(_.apply()).toList
-    override def shutdown(): Unit                              = ()
+    override def shutdown(): Unit = ()
   }
 
   "A Vec" - {

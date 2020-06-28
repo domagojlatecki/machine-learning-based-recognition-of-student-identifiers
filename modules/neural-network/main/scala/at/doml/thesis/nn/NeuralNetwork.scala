@@ -26,10 +26,10 @@ object NeuralNetwork {
     extends NeuralNetwork[In, Out]
 
   def random(
-    inputs: Int,
-    middle: List[Int],
+    inputs:  Int,
+    middle:  List[Int],
     outputs: Int,
-    wRange: (Double, Double)
+    wRange:  (Double, Double)
   ): NeuralNetwork[inputs.type, outputs.type] = {
     type In  = inputs.type
     type Out = outputs.type
