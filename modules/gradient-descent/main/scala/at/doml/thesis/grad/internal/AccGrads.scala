@@ -1,8 +1,8 @@
 package at.doml.thesis.grad.internal
 
-import at.doml.thesis.grad.internal.AccGrads.{ForwardPass, LastLayer}
-import at.doml.thesis.grad.internal.NeuralNetworkData.{BackwardPassData, FirstLayerData}
-import at.doml.thesis.nn.{Layer, NeuralNetwork}
+import at.doml.thesis.grad.internal.AccGrads.{ ForwardPass, LastLayer }
+import at.doml.thesis.grad.internal.NeuralNetworkData.{ BackwardPassData, FirstLayerData }
+import at.doml.thesis.nn.{ Layer, NeuralNetwork }
 import at.doml.thesis.util.collection.sized.Vec
 import scala.annotation.tailrec
 
@@ -24,10 +24,8 @@ private[grad] object AccGrads {
 
   final case class LastLayer[In <: Int, Out <: Int](layer: LayerGrads[In, Out]) extends AccGrads[In, Out]
 
-  final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](
-    first: LayerGrads[In, Mid],
-    rest:  AccGrads[Mid, Out]
-  ) extends AccGrads[In, Out]
+  final case class ForwardPass[In <: Int, Mid <: Int, Out <: Int](first: LayerGrads[In, Mid], rest: AccGrads[Mid, Out])
+    extends AccGrads[In, Out]
 
   def wrap[In <: Int, Out <: Int](neuralNetwork: NeuralNetwork[In, Out]): AccGrads[In, Out] = {
 
@@ -58,17 +56,15 @@ private[grad] object AccGrads {
     }
 
     @tailrec
-    def nnd2accLoop[O <: Int, FO <: Int](
-      n:           NeuralNetworkData[In, O, 0],
-      acc:         AccGrads[O, FO]
-    ): AccGrads[In, FO] = n match {
+    def nnd2accLoop[O <: Int, FO <: Int](n: NeuralNetworkData[In, O, 0], acc: AccGrads[O, FO]): AccGrads[In, FO] =
+      n match {
 
-      case BackwardPassData(layerData, previous) =>
-        nnd2accLoop(previous, ForwardPass(LayerGrads(Layer(layerData.neurons), layerData.accGrads), acc))
+        case BackwardPassData(layerData, previous) =>
+          nnd2accLoop(previous, ForwardPass(LayerGrads(Layer(layerData.neurons), layerData.accGrads), acc))
 
-      case FirstLayerData(layerData) =>
-        ForwardPass(LayerGrads(Layer(layerData.neurons), layerData.accGrads), acc)
-    }
+        case FirstLayerData(layerData) =>
+          ForwardPass(LayerGrads(Layer(layerData.neurons), layerData.accGrads), acc)
+      }
 
     neuralNetworkData match {
 
@@ -107,8 +103,8 @@ private[grad] object AccGrads {
 
     @tailrec
     def nnd2nnLoop[O <: Int, FO <: Int](
-      n:           NeuralNetworkData[In, O, 0],
-      acc:         NeuralNetwork[O, FO]
+      n:   NeuralNetworkData[In, O, 0],
+      acc: NeuralNetwork[O, FO]
     ): NeuralNetwork[In, FO] = n match {
 
       case BackwardPassData(layerData, previous) =>

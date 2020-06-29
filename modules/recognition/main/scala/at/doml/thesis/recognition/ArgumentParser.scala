@@ -115,18 +115,18 @@ object ArgumentParser {
     }
 
     final case class ArgsBuilder(
-      trainSamplesPath:             Option[SamplesPath]   = None,
-      testSamplesPath:              Option[SamplesPath]   = None,
-      testSamplesMovingAverageSize: Option[Int]           = None,
-      debugRoot:                    Option[Path]          = None,
-      outputFile:                   Option[Path]          = None,
-      neuralNetworkProvider:        NeuralNetworkProvider = CreateFromLayout(List(10 ,10)),
-      numbersPerImage:              Int                   = 10,
-      step:                         Double                = 1.0,
-      inertia:                      Double                = 0.0,
-      batchSize:                    BatchSize             = BatchSize.all,
-      maxIters:                     Int                   = 10_000,
-      targetError:                  Double                = 10e-7
+      trainSamplesPath:      Option[SamplesPath]   = None,
+      testSamplesPath:       Option[SamplesPath]   = None,
+      testMovingAverageSize: Option[Int]           = None,
+      debugRoot:             Option[Path]          = None,
+      outputFile:            Option[Path]          = None,
+      neuralNetworkProvider: NeuralNetworkProvider = CreateFromLayout(List(10 ,10)),
+      numbersPerImage:       Int                   = 10,
+      step:                  Double                = 1.0,
+      inertia:               Double                = 0.0,
+      batchSize:             BatchSize             = BatchSize.all,
+      maxIters:              Int                   = 10_000,
+      targetError:           Double                = 10e-7
     )
 
     type S = State
@@ -243,7 +243,7 @@ object ArgumentParser {
 
         case State.TestMovingAverageSize =>
           arg.toIntOption match {
-            case Some(v) if v >= 0 => Right((State.Init, acc.copy(testSamplesMovingAverageSize = Some(v))))
+            case Some(v) if v >= 0 => Right((State.Init, acc.copy(testMovingAverageSize = Some(v))))
             case Some(_)           => Left(IllegalArgumentError(arg))
             case None              => Left(NumberParseError(arg))
           }
@@ -310,17 +310,17 @@ object ArgumentParser {
 
           Right(
             Command.Train(
-              trainSamplesPath             = sp,
-              testSamplesPath              = acc.testSamplesPath,
-              testSamplesMovingAverageSize = acc.testSamplesMovingAverageSize,
-              debugRoot                    = acc.debugRoot,
-              outputFile                   = outputFile,
-              neuralNetworkProvider        = acc.neuralNetworkProvider,
-              step                         = acc.step,
-              inertia                      = acc.inertia,
-              batchSize                    = acc.batchSize,
-              maxIters                     = acc.maxIters,
-              targetError                  = acc.targetError
+              trainSamplesPath      = sp,
+              testSamplesPath       = acc.testSamplesPath,
+              testMovingAverageSize = acc.testMovingAverageSize,
+              debugRoot             = acc.debugRoot,
+              outputFile            = outputFile,
+              neuralNetworkProvider = acc.neuralNetworkProvider,
+              step                  = acc.step,
+              inertia               = acc.inertia,
+              batchSize             = acc.batchSize,
+              maxIters              = acc.maxIters,
+              targetError           = acc.targetError
             )
           )
 

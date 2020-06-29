@@ -367,14 +367,14 @@ object Main {
           new Parallel.NumProcessors()
         }
       val result = GradientCalc.optimize(nn)(
-        trainSamples                 = trainSamples,
-        testSamples                  = testSamples,
-        testSamplesMovingAverageSize = args.testSamplesMovingAverageSize,
-        step                         = args.step,
-        inertia                      = args.inertia,
-        batchSize                    = args.batchSize,
-        maxIters                     = args.maxIters,
-        targetError                  = args.targetError
+        trainSamples          = trainSamples,
+        testSamples           = testSamples,
+        testMovingAverageSize = args.testMovingAverageSize,
+        step                  = args.step,
+        inertia               = args.inertia,
+        batchSize             = args.batchSize,
+        maxIters              = args.maxIters,
+        targetError           = args.targetError
       )(par)
 
       par.shutdown()
