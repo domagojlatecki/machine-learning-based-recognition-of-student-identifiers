@@ -133,7 +133,7 @@ private object Settings {
  * * * * * * * */
 
 private implicit class SeqTaskOps[A](seq: Seq[A]) {
-  def |> [B](f: A => Task[B]) = Task.sequence(seq.map(f))
+  def |> [B](f: A => Task[B]) = T.sequence(seq.map(f))
 }
 
 trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
@@ -167,6 +167,14 @@ trait ScalaModule extends ScoverageModule with ScalafmtModule { outer =>
 
   val unit = new ScalaTests('unit, implicitly)
   val integration = new ScalaTests('integration, implicitly)
+
+  def reformatTests() = T.command {
+    Seq(unit, integration) |> { _.reformat() }
+  }
+
+  def reformatAll() = T.command {
+    Seq(this, unit, integration) |> { _.reformat() }
+  }
 
   def test() = T.command {
     Seq(unit, integration) |> { _.test() }
@@ -221,7 +229,7 @@ def compile() = T.command {
 }
 
 def reformat() = T.command {
-  allModules |> { _.reformat() }
+  allModules |> { _.reformatAll() }
 }
 
 def unit() = T.command {
