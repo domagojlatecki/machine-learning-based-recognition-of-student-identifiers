@@ -3,6 +3,7 @@
 \usepackage{array}
 \usepackage{pdfpages}
 \usepackage{diagbox}
+\usepackage{subcaption}
 \newcolumntype{M}[1]{ >{\centering\arraybackslash}m{#1} }
 \usepackage[hidelinks]{hyperref}
 \usepackage{listings}
@@ -18,7 +19,7 @@
 
     \maketitle
 
-    \izvornik % TODO remove?
+    \includepdf[pages=-, pagecommand={\setcounter{page}{2}}, width=\paperwidth]{attachments/task.pdf}
 
     \zahvala{Zahvaljujem se svojoj obitelji i prijateljima za podršku tijekom pisanja ovog rada. Također se zahvaljujem
     svima koji su mi pomogli svojim sudjelovanjem u prikupljanju podataka za učenje.}

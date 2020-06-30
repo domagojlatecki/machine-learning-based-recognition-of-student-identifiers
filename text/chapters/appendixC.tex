@@ -2,15 +2,15 @@
 \label{ch:primjer-serijaliziranih-podataka-znacajki-slike-i-neuronske-mreze}
 
 \section*{Značajke slike}
-Serijalizirane značajke slike zapisuju se za svaku znamenku pojedinačno. Svakoj znamenci na slici dodjeli se labela
+Serijalizirane značajke slike zapisuju se za svaku znamenku pojedinačno. Svakoj znamenci na slici dodjeljuje se labela
 i indeks pozicije gledano s lijeve strane slike. Za svaku znamenku koristi se jedna linija u izlaznoj tekstualnoj
-datoteci kako bi se zapisale njene značajke. Format te linije je sljedeći:\\
+datoteci kako bi se zapisale njene značajke. Format te linije je oblika:\\
 \footnotesize
 \texttt{\{label=<labela>;file=<ime datoteke>;index=<indeks>;(<značajke>;)\}}\\
 \normalsize
 Labela će uvijek biti cijeli broj u rasponu $[0, 9]$ ili znakovni niz \emph{``none''} dok je indeks cijeli broj u
 rasponu $[0, n - 1]$ gdje je $n$ broj znamenaka na slici. Značajke čini lista od 36 brojeva u rasponu $[0, 1]$ međusobno
-odvojenih zarezom. Primjer\footnote{Vrijednosti svih značajki zaokružene su na jednu decimalu radi kraćeg zapisa,
+odvojenih zarezom. Primjer\footnote{Vrijednosti svih značajki zaokružene su na jednu decimalu radi kraćeg zapisa;
 zapis u stvarnoj datoteci sadrži više decimala.} serijalizirane slike na kojoj se nalazi broj $1234567890$ prikazan je u
 nastavku.\\
 

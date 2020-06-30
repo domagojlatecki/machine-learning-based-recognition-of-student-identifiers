@@ -17,10 +17,10 @@ za skeniranje retine. Ovo se smatra prvim izumom u području raspoznavanja tekst
 teksta pojavila se kao pomagalo za slijepe i slabovidne osobe koju je 1900. primijenio ruski znanstvenik
 Tyurin\ \citep{govindan1989}. Područje se neprestano razvijalo kroz sljedećih nekoliko desetljeća, te se pojavom
 digitalnih računala sredinom 1940-ih godina razvija moderna inačica optičkog raspoznavanja teksta. Jedan od najranijih
-pokušaja raspoznavanja teksta opisan je u radu R. L. Grimsdale i ostalih pod naslovom
+pokušaja raspoznavanja teksta opisan je u radu R. L. Grimsdale i suradnika pod naslovom
 \emph{``A system for automatic recognition of patterns''}, 1959. godine. Ranih 1960-ih godina, američki znanstvenik
 Murray Eden predstavio je ideju da se svi latinični znakovi mogu formirati od maksimalno 18 poteza, koji se nadalje mogu
-formirati od podskupa 4 segmenata. Ovaj koncept zaslužan je za uspostavu metode analize koristeći sintezu, međutim
+formirati od podskupa četiri segmenta. Ovaj koncept zaslužan je za uspostavu metode analize koristeći sintezu, međutim
 njegova je veća važnost ta što je formalno dokazano da se rukom pisani znakovi mogu formirati iz konačnog skupa
 značajki\ \citep{mantas1986}. Mogućnost dekompozicije znakova u manje cjeline sretna je okolnost za područje
 raspoznavanja teksta jer svaka cjelina može doprinijeti neku značajnost u postupku raspoznavanja\ \citep{mori1999}.
@@ -30,7 +30,7 @@ raspoznavanja teksta jer svaka cjelina može doprinijeti neku značajnost u post
 \label{sec:podjela-podrucja}
 Područje raspoznavanja teksta može su podijeliti na tri dijela: magnetsko raspoznavanje teksta, mehaničko raspoznavanje
 teksta te optičko raspoznavanje teksta. Magnetsko i mehaničko raspoznavanje teksta neće se dalje razmatrati u ovome
-radu te će fokus biti na optičkom raspoznavanju teksta. Optičko raspoznavanje teksta u širem smislu spada pod granu
+radu te će fokus biti na optičkom raspoznavanju teksta. Optičko raspoznavanje teksta u širem smislu pripada grani
 umjetne inteligencije\ \citep{mori1999} te se dalje može podijeliti na:
 \begin{enumerate}
     \item \emph{Raspoznavanje znakova fiksne širine}. Ovaj dio područja bavi se raspoznavanjem pojedinih znakova
@@ -43,7 +43,7 @@ umjetne inteligencije\ \citep{mori1999} te se dalje može podijeliti na:
     ograničenja stila pisanja. Znakovi mogu biti spojeni i pisani kurzivnim stilom.
 \end{enumerate}
 Raspoznavanje znakova fiksne širine dalje se može podijeliti na raspoznavanje znakova specifičnog fonta, raspoznavanje
-znakova više različitih fontova i raspoznavanje znakova bilo svih fontova\ \citep{govindan1989}.
+znakova više različitih fontova i raspoznavanje znakova svih fontova\ \citep{govindan1989}.
 Slika\footnote{Slika je preuzeta i prilagođena iz\ \citep{mantas1986}.}\ \ref{fig:podjela-podrucja-raspoznavanja-teksta}
 prikazuje podjelu područja raspoznavanja teksta na tri glavna dijela te detaljnu podjelu područja optičkog raspoznavanja
 teksta.
@@ -56,13 +56,13 @@ teksta.
 S obzirom na korištene značajke, tehnike raspoznavanja teksta možemo razvrstati u dvije
 kategorije\ \citep{govindan1989}:
 \begin{enumerate}
-    \item \emph{Tehnika korelacije i podudaranja predložaka}
-    \item \emph{Tehnika analize i podudaranja značajki}
+    \item \emph{Tehnika korelacije i podudaranja predložaka},
+    \item \emph{Tehnika analize i podudaranja značajki}.
 \end{enumerate}
 Kod tehnike korelacije i podudaranja predložaka ulazni znakovi se uspoređuju sa skupom predložaka znakova te se
 klasifikacija obavlja na temelju sličnosti. Metoda usporedbe znakova može biti veoma jednostavna, kao što je usporedba
 svakog pojedinog odgovarajućeg piksela, ili komplicirana, kao na primjer usporedba koristeći stablo odluke koje određuje
-koji pikseli će se uspoređivati. Glavni nedostatak ove tehnike je neotpornost na ulazne smetnje i varijaciju u stilu
+koji će se pikseli uspoređivati. Glavni nedostatak ove tehnike je neotpornost na ulazne smetnje i varijaciju u stilu
 pisanja. Tehnika analize i podudaranja značajki češće je korištena tehnika raspoznavanja teksta. Ova tehnika
 podrazumijeva odabir odgovarajućih značajki koje se uspoređuju sa značajkama idealnih znakova te se znak čije se
 značajke najviše podudaraju s ulaznim primjerom dodjeljuje kao prepoznati znak\ \citep{govindan1989}.
@@ -78,30 +78,30 @@ ne može u potpunosti opisati ulazne uzorke na temelju strukturnih modela znakov
 mogu uvijek u potpunosti opisati matematičkim i formalnim jezikom. Zbog toga, za raspoznavanje teksta potrebne su
 tehnike za opisivanje velikog broja sličnih struktura iste kategorije dok istovremeno dozvoljavamo različite opise
 među kategorijski različitim uzorcima\ \citep{govindan1989}. Pristup problemu raspoznavanja znakova također možemo
-podijeliti ovisno o korištenoj metodologiji. Metodologije za raspoznavanje teksta mogu se svrstati u sljedećih 6
+podijeliti ovisno o korištenoj metodologiji. Metodologije za raspoznavanje teksta mogu se svrstati u sljedećih šest
 kategorija\ \citep{mantas1986}:
 \begin{enumerate}
     \item \emph{Globalna usporedba točaka} - pikseli ulazne slike uspoređuju se sa svim pikselima baze znakova.
     \item \emph{Globalne transformacije} - kao značajke odabiru se vrijednosti dobivene koristeći neku od globalnih
     transformacija nad ulaznom slikom, kao na primjer \emph{Karhunen-Loèveova} ili \emph{Fourierova} transformacija.
-    \item \emph{Odabir lokalnih značajki} - pod ovu kategoriju spadaju značajke dobivene analizom krajnjih točaka
+    \item \emph{Odabir lokalnih značajki} - ovoj kategoriji pripadaju značajke dobivene analizom krajnjih točaka
     znakova, točaka presjecišta linija, vrijednosti kuteva među linijama te ostalim sličnim metodama. Često je potrebno
     stanjiti ulazne znakove prije određivanja vrijednosti značajki.
     \item \emph{Odabir značajki koristeći linije} - koriste se vertikalne, horizontalne te dijagonalne linije kako bi
-    se odredile vrijednost značajki.
+    se odredile vrijednosti značajki.
     \item \emph{Analiza krivulja} - značajke se određuju preko smjera krivulja i geometrijske analize.
     \item \emph{Strukturna analiza} - ulazni znakovi rastavljaju se na manje gradivne komponente koje se zatim
     reduciraju u graf koji opisuje topologiju znaka.
 \end{enumerate}
-Neovisno o odabranoj metodologiji, proces raspoznavanja teksta može se ugrubo podijeliti u tri dijela: pretprocesiranje,
-odabir značajki te klasifikacija\ \citep{mori1999}. Pretprocesiranje je korak je čija se važnost često zanemari u odnosu
-na preostala dva koraka, ali ono je podjednako važno. Kvalitetno pretprocesiranje može značajno smanjiti kompleksnost
-ulazne slike te time olakšati proces odabira značajki, što će dalje pridonijeti boljoj klasifikaciji.
+Neovisno o odabranoj metodologiji, proces raspoznavanja teksta može se ugrubo podijeliti na tri dijela:
+pretprocesiranje, odabir značajki te klasifikacija\ \citep{mori1999}. Pretprocesiranje je korak čija se važnost često
+zanemari u odnosu na preostala dva koraka, ali je podjednako važno. Kvalitetno pretprocesiranje može značajno smanjiti
+kompleksnost ulazne slike i time olakšati proces odabira značajki, što će dalje pridonijeti boljoj klasifikaciji.
 
 
 \section{Analiza postojećih radova}
 \label{sec:analiza-postojecih-radova}
-Ovaj rad bavi se raspoznavanjem rukom pisanih znamenaka, koje je podskupom problema raspoznavanja ručno pisanog teksta.
+Ovaj rad bavi se raspoznavanjem rukom pisanih znamenaka, koje je podskup problema raspoznavanja ručno pisanog teksta.
 Raspoznavanje rukom pisanog teksta podrazumijeva da ne postoje ograničenja stila pisanja i odvojivosti
 znakova\ \citep{mantas1986}. Ovaj odjeljak analizira nekoliko znanstvenih radova koji nude razne pristupe navedenom
 problemu.
@@ -113,90 +113,89 @@ bio je pokazati da se unaprijedna neuronska mreža može koristiti za raspoznava
 pretprocesiranja ulaznih slika. Stoga je ulaz neuronske mreže cijela slika umjesto vektora značajki. Time je pokazana
 mogućnost unaprijedne neuronske mreže da uspješno interpretira informacije niske razine te uz pomoć njih klasificira
 ulaznu sliku. Pošto je ulaz neuronske mreže fiksne veličine, sve slike su skalirane na veličinu $16 \times 16$
-piksela\footnote{Prosječna veličina slike bila je $40 \times 60$ piksela.} koristeći linearnu transformaciju. Slike su
-pri skaliranju zadržale svoj originalan omjer visine i širine, pa zbog toga nastaju sive nijanse koje se normaliziraju
-na raspon $[-1, 1]$ koji se koristi kao ulazna vrijednost neuronske mreže. Korištena neuronska mreža ima 10 izlaza, sa
+piksela\footnote{Prosječna veličina slike bila je $40 \times 60$ piksela.} koristeći linearnu transformaciju. Slike pri
+skaliranju zadržavaju svoj originalan omjer visine i širine, pa zbog toga nastaju sive nijanse koje se normiraju na
+raspon $[-1, 1]$ koji se koristi kao ulazna vrijednost neuronske mreže. Korištena neuronska mreža ima deset izlaza, sa
 željenim izlaznim vrijednostima u rasponu $[-1, 1]$. Kako arhitektura neuronske mreže jako utječe na njenu sposobnost
-generalizacije, bilo je potrebno uvesti ograničenja za vrijeme postupka učenja kako bi se izbjegla prenaučenost mreže.
+generalizacije, bilo je potrebno uvesti ograničenja za vrijeme postupka učenja da bi se izbjegla prenaučenost mreže.
 Prvo ograničenje nalazi se u početnim slojevima mreže tako da neuroni u tim slojevima mogu tvoriti međusobne veze
-samo lokalno. Na ovaj način dobivaju se izlazi koji će biti ekvivalentni konvoluciji s malom jezgrom i funkcijom
-sažimanja. Ostatak mreže koristi sličan princip ograničenja veza među neuronima, ali također uvodi lokalno
-ujednačavanje. Time je postignuta otpornost mreže na translacije i ulazne smetnje u slici.\\
+samo lokalno. Na ovaj način dobivaju se izlazi koji su ekvivalentni konvoluciji s malom jezgrom i funkcijom sažimanja.
+Ostatak mreže koristi sličan princip ograničenja veza među neuronima, ali također uvodi lokalno ujednačavanje. Time je
+postignuta otpornost mreže na translacije i ulazne smetnje u slici.
+Segmentacija slika je obavljena ručno te rad ne razmatra postupak segmentacije. Korišteni skup podataka sastoji se od
+9298 rukom pisanih brojeva i 3249 tiskanih brojeva koristeći 35 različitih fontova. Skup za učenje koristio je 7291
+rukom pisanih i 2549 tiskanih brojeva dok je testni skup sadržavao preostalih 2007 rukom pisanih i 700 tiskanih brojeva.
+Fontovi korišteni u skupu za učenje i testnom skupu bili su različiti. Postignuta greška na skupu za učenje iznosila je
+$1.1\%$ dok je greška na testnom skupu iznosila $3.4\%$. Sve pogreške klasifikacije dogodile su se na podskupu rukom
+pisanih znakova. Naučena mreža također uspješno raspoznaje atipično stilizirane znamenke kao što je prikazano na
+slici\footnote{Slika je preuzeta iz\ \citep{leCun1990}.}\ \ref{fig:atipicno-stilizirane-znamenke}.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/chapter2/atypical-data.png}
     \caption{Atipično stilizirane znamenke.}
     \label{fig:atipicno-stilizirane-znamenke}
 \end{figure}
-Segmentacija slika je obavljena ručno te rad ne razmatra postupak segmentacije. Korišteni skup podataka sastoji se od
-9.298 rukom pisanih brojeva i 3.249 tiskanih brojeva koristeći 35 različitih fontova. Skup za učenje koristio je 7.291
-rukom pisanih i 2.549 tiskanih brojeva dok je testni skup sadržao preostalih 2.007 rukom pisanih i 700 tiskanih brojeva.
-Fontovi korišteni u skupu za učenje i testnom skupu su različiti. Postignuta greška na skupu za učenje iznosi $1{,}1\%$
-dok greška na testnom skupu iznosi $3{,}4\%$. Sve pogreške klasifikacije dogodile su se na podskupu rukom pisanih
-znakova. Naučena mreža također uspješno raspoznaje atipično stilizirane znamenke, kao što je prikazano na
-slici\footnote{Slika je preuzeta iz\ \citep{leCun1990}.}\ \ref{fig:atipicno-stilizirane-znamenke}.
 
 \subsection{Raspoznavanje rukom pisanih znakova koristeći lokalne gradijente opisnika značajki}
 \label{subsec:raspoznavanje-rukom-pisanih-znakova-koristeci-lokalne-gradijente-opisnika-znacajki}
 Metoda lokalnih gradijenata kao odabranih značajki znakova pokazuje bolje rezultate nego metode koje direktno koriste
-intenzitete piksela kao ulaze kao što je pokazano u\ \citep{surinta2015}. Navedeni rad analizirao je raspoznavanje
-znakova i brojeva koristeći metodu lokalnih gradijenata na tri različita pisma: Latiničnom, Tajlandskom i Bengalskom.
-Rad opisuje dva pristupa računanju lokalnih gradijenata: prvi pristup koristi histogram orijentiranih gradijenata
-(\emph{HOG}) dok drugi pristup koristi transformaciju značajki koja ne ovisi o veličini (\emph{SIFT}\footnote{
-Engl. \emph{scale invariant feature transform.}}).\\
+intenzitete piksela kao ulaze što je pokazano u\ \citep{surinta2015}. Navedeni rad analizirao je raspoznavanje znakova i
+brojeva koristeći metodu lokalnih gradijenata na tri različita pisma: latiničnom, tajlandskom i bengalskom. Rad opisuje
+dva pristupa računanju lokalnih gradijenata: prvi pristup koristi histogram orijentiranih gradijenata (\emph{HOG}) dok
+drugi pristup koristi transformaciju značajki koja ne ovisi o veličini (\emph{SIFT}\footnote{Engl. \emph{scale invariant
+feature transform.}}).\\
 Kod pristupa \emph{HOG}, ulazne značajke definiraju se kao distribucija intenziteta lokalno orijentiranih gradijenata
-slike koji se računaju za male povezane regije. Za svaki piksel slike računaju se sljedeće vrijednosti:\\
-\begin{equation*}
-    G_x = f(x + 1, y) - f(x - 1, y),
-\end{equation*}
-\begin{equation*}
-    G_y = f(x, y + 1) - f(x, y - 1).
-\end{equation*}
+slike koji se računaju za male povezane regije. Za svaki piksel slike računaju se vrijednosti:\\
+\begin{equation}
+    G_x = f(x + 1, y) - f(x - 1, y),\label{eq:grad-x}
+\end{equation}
+\begin{equation}
+    G_y = f(x, y + 1) - f(x, y - 1).\label{eq:grad-y}
+\end{equation}
 \\
 $G_x$ je horizontalna, a $G_y$ vertikalna komponenta gradijenta u nekom pixelu $(x, y)$. Ulazni raspon za smjer
-gradijenta ograničen je na $[0^{\circ}, 180^{\circ}]$. Magnituda gradijenta $M$ i smjer gradijenta $\alpha$ računaju se
-na sljedeći način:\\
-\begin{equation*}
-    M(x, y) = \sqrt{{G_x}^2 + {G_y}^2},
-\end{equation*}
-\begin{equation*}
-    \theta(x, y) = \arctan{\frac{G_y}{G_x}}.
-\end{equation*}
+gradijenta ograničen je na $[0^{\circ}, 180^{\circ}]$. Magnituda gradijenta $M$ i smjer gradijenta $\alpha$ računaju se pomoću
+izraza:\\
+\begin{equation}
+    M(x, y) = \sqrt{{G_x}^2 + {G_y}^2},\label{eq:grad-magnitude}
+\end{equation}
+\begin{equation}
+    \theta(x, y) = \arctan{\frac{G_y}{G_x}}.\label{eq:grad-angle}
+\end{equation}
 \\
-Nakon ovog koraka, histogrami se računaju iz vrijednosti usmjerenih gradijenata za blokove određene veličine.
-Kombinacija histograma svih blokova tvori vektor ulaznih značajki. Pokazano je kako performansa ovakvog opisnika ovisi
-o broju blokova u ulaznoj slici, tako da je potrebno pažljivo odabrati veličinu bloka u odnosu na veličinu slike. Prije
-korištenja dobivenog vektora značajki, provodi se njegova normalizacija koristeći \emph{L2} normu:\\
-\begin{equation*}
-{V_k}
-    ^{'} = \frac{V_k}{\sqrt{{||V_k||}^2 + \epsilon}}.
-\end{equation*}
+Nakon toga, histogrami se računaju iz vrijednosti usmjerenih gradijenata za blokove određene veličine. Kombinacija
+histograma svih blokova tvori vektor ulaznih značajki. Pokazano je kako uspješnost ovakvog opisnika ovisi o broju
+blokova u ulaznoj slici tako da je potrebno pažljivo odabrati veličinu bloka u odnosu na veličinu slike. Prije
+korištenja dobivenog vektora značajki, provodi se njegovo normiranje uz korištenje \emph{L2} norme:\\
+\begin{equation}
+{V_k}^{'} = \frac{V_k}{\sqrt{{||V_k||}^2 + \epsilon}}.\label{eq:normalized-features}
+\end{equation}
 \\
-$V_k$ je kombinirani histogram svih blokova, $\epsilon$ je mala konstanta blizu nule, a ${V_k}^{'}$ je normalizirani
-vektor značajki.\\
-Pristup \emph{SIFT} računa $128$-dimenzijski vektor značajki za određene ključne točke slike. Kako broj ključnih točaka
-može varirati ovisno o ulaznoj slici, u radu je odabran određen broj fiksnih ključnih točaka, kao na primjer sredina
+$V_k$ je kombinirani histogram svih blokova, $\epsilon$ je mala konstanta blizu nule, a ${V_k}^{'}$ je normirani vektor
+značajki.\\
+Pristup \emph{SIFT} računa 128-dimenzijski vektor značajki za određene ključne točke slike. Kako broj ključnih točaka
+može varirati ovisno o ulaznoj slici, u radu je odabran određen broj fiksnih ključnih točaka kao na primjer sredina
 ulazne slike. Metoda \emph{SIFT} prvo računa vrijednost konvolucije koristeći \emph{Gaussovu} jezgru varijabilne
 veličine:\\
-\begin{equation*}
-    L(x, y, \sigma) = G(x, y, \sigma) * I(x, y).
-\end{equation*}
+\begin{equation}
+    L(x, y, \sigma) = G(x, y, \sigma) * I(x, y).\label{eq:gauss-kernel}
+\end{equation}
 \\
-$I(x, y)$ je intenzitet piksela $(x, y)$, a $G(x, y, \sigma)$ je \emph{Gaussova} jezgra. Parametar $\sigma$ odrađuje
+$I(x, y)$ je intenzitet piksela $(x, y)$, dok je $G(x, y, \sigma)$ \emph{Gaussova} jezgra. Parametar $\sigma$ odrađuje
 širinu \emph{Gaussove} jezgre. Nakon toga računaju se horizontalne i vertikalne komponente gradijenta:\\
-\begin{equation*}
-    G_x = L(x + 1, y, \sigma) - L(x - 1, y, \sigma),
-\end{equation*}
-\begin{equation*}
-    G_x = L(x, y + 1, \sigma) - L(x, y - 1, \sigma).
-\end{equation*}
+\begin{equation}
+    G_x = L(x + 1, y, \sigma) - L(x - 1, y, \sigma),\label{eq:gauss-grad-x}
+\end{equation}
+\begin{equation}
+    G_x = L(x, y + 1, \sigma) - L(x, y - 1, \sigma).\label{eq:gauss-grad-y}
+\end{equation}
 \\
-Zadnji korak ove metode računa magnitude i smjerove gradijenata na isti način kao i kod metode \emph{HOG}. Kao
+Zadnji korak ove metode računa magnitude i smjerove gradijenata na isti način kao u metodi \emph{HOG}. Kao
 klasifikatori korišteni su algoritam $k$-najbližih susjeda i stroj potpornih vektora. Skup za treniranje sastoji se od
-preko 60 tisuća znakova, dok se testni skup sastoji od oko 17 tisuća znakova kroz sva tri korištena pisma. Kod
-klasifikacije algoritmom $k$-najbližih susjeda metoda \emph{SIFT} pokazuje znatno bolje rezultate na Tajlandskom i
-Bengalskom skupu znakova, dok metoda \emph{HOG} dalje bolje rezultate za Latinične znakove. Međutim, klasifikacija
-strojem potpornih vektora daje najbolje rezultate za sva tri pisma koristeći metodu \emph{SIFT}.
+preko 60000 znakova, dok se testni skup sastoji od oko 17000 znakova kroz sva tri korištena pisma. Kod klasifikacije
+algoritmom $k$-najbližih susjeda metoda \emph{SIFT} pokazuje znatno bolje rezultate na tajlandskom i bengalskom skupu
+znakova dok metoda \emph{HOG} dalje bolje rezultate za latinične znakove. Međutim, klasifikacija strojem potpornih
+vektora daje najbolje rezultate za sva tri pisma koristeći metodu \emph{SIFT}.
 
 \subsection{Segmentacija i raspoznavanje teksta na kompleksnoj pozadini temeljeno na \emph{Markovljevom} nasumičnom
 polju}
@@ -204,18 +203,18 @@ polju}
 Većina metoda za raspoznavanje teksta koristi pretpostavku da je raspodjela sivih nijansi ulazne slike bimodalna te da
 su znakovi isključivo crni ili bijeli dijelovi te razdiobe. Postupak opisan u\ \citep{chen2002} razmatra raspoznavanje
 znakova na kompleksnoj pozadini gdje je moguće da su sive nijanse znakova jako slične sivim nijansama pozadine. U tom
-slučaju pokazano je da klasifikacija može jako varirati ovisno o kvaliteti segmentacije ulazne slike pošto se greške
+slučaju pokazano je da klasifikacija može značajno varirati ovisno o kvaliteti segmentacije ulazne slike pošto se greške
 segmentacije direktno prenose u postupak klasifikacije. Navedeni postupak stoga generira određeni broj hipoteza o
 segmentaciji slike kod kojih se zatim provodi analiza povezanih komponenti. Svaka hipoteza šalje se dalje u klasifikator
 koji dalje vjerojatnosnu vrijednost klasifikacije te se odabire najvjerojatniji rezultat. Kod postupka segmentacije
 intenziteti ulaznih piksela modeliraju se kao kombinacija $K$ nasumičnih procesa. Svaki nasumični proces može se
 smatrati jednim slojem ulazne slike koji sadrži slične vrijednosti intenziteta, te će jedan od njih sadržavati ulazne
 znakove. Rad je testirao dva algoritma za proces segmentacije: \emph{EM}\footnote{Algoritam maksimizacije očekivanja,
-engl. \emph{Expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
+engl. \emph{expectation-maximization algorithm}.} i \emph{GEM}\footnote{\emph{Gibbsov} algoritam maksimizacije
 očekivanja.}. Kod \emph{EM} algoritma, kombinacija svih nasumičnih procesa definira se na sljedeći način:\\
-\begin{equation*}
-    p(o_s) = \sum_{k = 1}^{K} p(o_s | e_s = k) p(e_s = k) = \sum_{k = 1}^{K} \pi_k p_k(o_s).
-\end{equation*}
+\begin{equation}
+    p(o_s) = \sum_{k = 1}^{K} p(o_s | e_s = k) p(e_s = k) = \sum_{k = 1}^{K} \pi_k p_k(o_s).\label{eq:markov-prob}
+\end{equation}
 \\
 Koristeći normalnu razdiobu $p_i(o_s) = \mathcal{N}(\mu_i, \sigma_i)$, potrebno je pronaći skup parametara
 $(\mu_i, \sigma_i, \pi_i)$ za koji područje oznaka $e = \{e_s, 1 \leq e_s \leq K, s \in S\}$ najbolje opisuje ulazne

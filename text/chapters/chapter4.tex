@@ -1,12 +1,12 @@
 \chapter{Opis problema}
 \label{ch:opis-problema}
 Ovaj rad bavi se problemom raspoznavanja studentskih identifikacijskih brojeva, poznatih pod skraćenicom
-\emph{JMBAG}\footnote{\emph{Jedinstveni Matični Broj Akademskog Građana.}}. Ti se brojevi sastoje od deset znamenaka i
+\emph{JMBAG}\footnote{\emph{Jedinstveni Matični Broj Akademskog Građana.}}. Ti brojevi se sastoje od deset znamenaka i
 svakom studentu je dodijeljen jedinstveni broj koji služi kao identifikator studenta u sustavu hrvatskih fakulteta.
 Kod pristupanja ispitima, od studenata se očekuje da uz ime i prezime također napišu svoj \emph{JMBAG} kako bi ih se
 moglo jedinstveno identificirati u sustavu. Stoga je korisno napraviti sustav koji će moći automatski raspoznavati te
 brojeve. Problem raspoznavanja \emph{JMBAG}-ova može se podijeliti u tri faze: pretprocesiranje, segmentacija i
-klasifikacija. Faza pretprocesiranja služi kako bi se ulazna slika normalizirala te kako bi se znamenke odvojile od
+klasifikacija. Faza pretprocesiranja služi kako bi se ulazna slika normirala te kako bi se znamenke odvojile od
 pozadine. U fazi segmentacije potrebno je odrediti granice između pojedinačnih znamenki \emph{JMBAG}-a kako bi se svaka
 znamenka mogla pojedinačno raspoznavati. Moguće je raspoznavati i više znamenki odjednom, ali tada klasifikator mora
 biti kompleksniji i skup podataka za učenje mora biti veći. Zbog toga je poželjnije raspoznavati pojedinačne znamenke,
@@ -14,68 +14,73 @@ jer se skup za učenje efektivno poveća deset puta i sam klasifikator može bit
 klasifikacije raspoznaje svaku znamenku pojedinačno. Slijednim spajanjem pojedinačno klasificiranih brojeva dobiva se
 konačno raspoznati \emph{JMBAG}. U sljedećim odjeljcima bit će opisana implementacija navedenih faza raspoznavanja te
 njihovo povezivanje u sustav za raspoznavanje \emph{JMBAG}-ova. Također će biti opisan način povezivanja navedenih faza
-u konačan program kojim se trenira neuronska mreža te koji omogućuje raspoznavanje brojeva proizvoljnog broja znamenaka.
-
+u konačan program kojim se trenira neuronska mreža i omogućuje raspoznavanje brojeva proizvoljnog broja znamenaka.
+\newpage
 
 \section{Pretprocesiranje}
 \label{sec:pretprocesiranje}
-\begin{figure}[htb]
+Faza pretprocesiranja omogućuje jednoliko tretiranje ulaznih slika u preostalim fazama raspoznavanja. To se postiže na
+način da se ulazna slika binarizira - dio slike koji predstavlja broj mora biti jasno odvojen od pozadine slike.
+Slika\ \ref{fig:preprocessing-original-image} je primjer ulazne slike nekog \emph{JMBAG}-a.
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=12cm]{images/chapter4/preprocessing-original-image.png}
     \caption{\emph{JMBAG} prije pretprocesiranja.}
     \label{fig:preprocessing-original-image}
 \end{figure}
-Faza pretprocesiranja omogućuje jednoliko tretiranje ulaznih slika u preostalim fazama raspoznavanja. To se postiže na
-način da se ulazna slika binarizira - dio slike koji predstavlja broj mora biti jasno odvojen od pozadine slike. Nakon
-učitavanja slike u memoriju, prvi korak prema binarizaciji je uklanjanje svih boja iz slike. Time će se dobiti slika u
-nijansama sive boje nad kojom se dalje može provesti postupak binarizacije. Kako bi se uklonila boja iz slike, za svaki
-piksel računa se njegov intenzitet na sljedeći način:\\
-\begin{equation*}
-    I = \left(\frac{I_{crvena} + I_{zelena} + I_{plava}}{765}\right)^{2} \cdot 255.
-\end{equation*}\\
+\newline
+Nakon učitavanja slike u memoriju, prvi korak prema binarizaciji je uklanjanje svih boja iz slike. Time će se dobiti
+slika u nijansama sive boje nad kojom se dalje može provesti postupak binarizacije. Kako bi se uklonila boja iz slike,
+za svaki piksel računa se njegov intenzitet na sljedeći način:\\
+\begin{equation}
+    I = \left(\frac{I_{crvena} + I_{zelena} + I_{plava}}{765}\right)^{2} \cdot 255.\label{eq:pixel-intensity}
+\end{equation}\\
 Kako se piksel sastoji od komponenata $I_{crvena}$, $I_{zelena}$ i $I_{plava}$ čiji je raspon vrijednosti $[0, 255]$,
-pri izračunu intenziteta njihov zbroj dijelimo sa zbrojem njihovih maksimalnih vrijednosti ($3 \cdot 255 = 765$).
-Dobiveni rezultat zatim kvadriramo kako bi se bolje aproksimirala percepcija ljudskog oka na svjetlinu. Na kraju,
+pri izračunu intenziteta njihov zbroj se dijeli sa zbrojem njihovih maksimalnih vrijednosti ($3 \cdot 255 = 765$).
+Dobiveni rezultat se zatim kvadrira kako bi se bolje aproksimirala percepcija ljudskog oka na svjetlinu. Na kraju,
 kvadrirani rezultat pomnoži se s $255$ kako bi se opet dobila vrijednost u rasponu $[0, 255]$. Dobiveni intenzitet $I$
-zatim se koristi kao nova vrijednost komponenata $I_{crvena}$, $I_{zelena}$ i $I_{plava}$ za taj piksel.\\
-\begin{figure}[htb]
+zatim se koristi kao nova vrijednost komponenata $I_{crvena}$, $I_{zelena}$ i $I_{plava}$ za taj piksel. Opisani proces
+uklanjanja boje prikazan je na slici\ \ref{fig:preprocessing-grayscale-image}.\\
+\begin{figure}[!htb]
     \centering
     \includegraphics[width=12cm]{images/chapter4/preprocessing-grayscale-image.png}
     \caption{\emph{JMBAG} nakon uklanjanja boje iz slike.}
     \label{fig:preprocessing-grayscale-image}
 \end{figure}
+\newpage
+\noindent
 Sada kada je za svaki piksel izračunat njegov intenzitet, može se provesti postupak binarizacije. Prvo je potrebno
 pronaći minimalnu vrijednost intenziteta $I_{\min}$ i maksimalnu vrijednost intenziteta $I_{\max}$ na cijeloj slici za
 sve potpuno vidljive piksele\footnote{Piksel se smatra potpuno vidljivim ako je vrijednost njegove neprozirnosti
 jednaka $255$.}. Preko $I_{\min}$ i $I_{\max}$ računa se intenzitet odsijecanja:\\
-\begin{equation*}
-    I_{o} = \frac{I_{\max} - I_{\min}}{2}.
-\end{equation*}\\
+\begin{equation}
+    I_{o} = \frac{I_{\max} - I_{\min}}{2}.\label{eq:cutoff-intensity}
+\end{equation}\\
 Intenzitet odsijecanja $I_{o}$ zatim se koristi kako bi se slika binarizirala na sljedeći način:
 \begin{enumerate}
     \item Ako je vrijednost neprozirnosti piksela $(x, y)$ manja od $255$, piksel će pripadati pozadini.
     \item Ako je intenzitet piksela $(x, y)$ veći od intenziteta odsijecanja $I_{o}$, piksel će pripadati pozadini.
     \item Inače će piksel pripadati \emph{JMBAG}-u koji se raspoznaje.
 \end{enumerate}
-Kod binarizacije su pikseli pozadine bijele boje, dok su pikseli \emph{JMBAG}-a crne boje.
-Slike\ \ref{fig:preprocessing-original-image},\ \ref{fig:preprocessing-grayscale-image}
-i\ \ref{fig:preprocessing-binarized-image} prikazuju jedan \emph{JMBAG} kroz opisane korake pretprocesiranja.
+Kod binarizacije pikseli pozadine su bijele boje, dok su pikseli \emph{JMBAG}-a crne boje.
+Slika\ \ref{fig:preprocessing-binarized-image} prikazuje jedan \emph{JMBAG} nakon konačnog koraka pretprocesiranja.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/chapter4/preprocessing-binarized-image.png}
     \caption{\emph{JMBAG} nakon postupka binarizacije.}
     \label{fig:preprocessing-binarized-image}
 \end{figure}
+\newpage
 
 
 \section{Segmentacija}
 \label{sec:segmentacija}
-Nakon binarizacije potrebno je pronaći granice među brojevima \emph{JMBAG}-a kako bi se oni mogli zasebno raspoznavati
-u klasifikatoru. Kako slika dobivena postupkom binarizacije sadrži samo crnu i bijelu boju, za postupak segmentacije
+Nakon binarizacije potrebno je pronaći granice među brojevima \emph{JMBAG}-a kako bi se mogli zasebno raspoznavati u
+klasifikatoru. Kako slika dobivena postupkom binarizacije sadrži samo crnu i bijelu boju, za postupak segmentacije
 korištena je pretpostavka da su brojevi na slici pojedinačno odvojene komponente. Stoga prvi korak segmentacije
-pronalazi sve crne povezane komponente na slici te ih grupira u međusobno disjunktne skupove piksela koje će se u
+pronalazi sve crne povezane komponente na slici te ih grupira u međusobno disjunktne skupove piksela koji će se u
 daljnjem tekstu nazivati grupama piksela. U idealnom slučaju, svaka znamenka sastojat će se od samo jedne grupe piksela
-koja je odvojena od svih ostalih grupa znamenaka, time ukupno tvoreći 10 grupa piksela. Ovakav slučaj prikazan je na
+koja je odvojena od svih ostalih grupa znamenaka, time ukupno tvoreći deset grupa piksela. Ovakav slučaj prikazan je na
 slici\ \ref{fig:ideal-segmentation} gdje je svaka grupa piksela obojena različitom bojom.
 \begin{figure}[htb]
     \centering
@@ -83,12 +88,13 @@ slici\ \ref{fig:ideal-segmentation} gdje je svaka grupa piksela obojena različi
     \caption{Idealno odvojene znamenke \emph{JMBAG}-a.}
     \label{fig:ideal-segmentation}
 \end{figure}
+\newline
 Međutim, ovo neće uvijek biti slučaj te će neke slike sadržavati veći ili manji broj grupa piksela koje ne moraju nužno
 odgovarati pojedinačnim znamenkama. Kako bi se za takve slike proveo postupak segmentacije, pronađene grupe piksela
-dijele se na glavne grupe piksela i sporedne grupe piksela. Glavne grupe piksela čini skupina od najviše 10 grupa
-piksela sa slike koje pojedinačno sadrže barem $\frac{1}{30}$ ukupnog broja crnih piksela na slici, dok su sve ostale
-grupe sporedne grupe. Time je osigurano da će glavnih grupa uvijek biti 10 ili manje. Ovisno o broju pronađenih glavnih
-grupa, implementirani algoritam segmentacije podešava skup glavnih grupa na sljedeći način:
+dijele se na glavne i sporedne grupe piksela. Glavne grupe piksela čini skupina od najviše deset grupa piksela sa slike
+koje pojedinačno sadrže barem $\frac{1}{30}$ ukupnog broja crnih piksela na slici, dok su sve ostale grupe sporedne
+grupe. Time je osigurano da će glavnih grupa uvijek biti deset ili manje. Ovisno o broju pronađenih glavnih grupa,
+implementirani algoritam segmentacije podešava skup glavnih grupa na način:
 \begin{enumerate}
     \item Ako je pronađeno 10 glavnih grupa, skup glavnih grupa ne treba podešavati.
     \item Ako je pronađeno 9 glavnih grupa, glavna grupa najveće širine uklanja se iz skupa glavnih grupa te se dijeli
@@ -105,45 +111,60 @@ grupa, implementirani algoritam segmentacije podešava skup glavnih grupa na slj
 \end{enumerate}
 Ako nakon prethodnog koraka podešavanja skup glavnih grupa ne sadrži ukupno 10 grupa, algoritam segmentacije označava
 sliku kao neispravnu te se postupak klasifikacije neće provoditi za tu sliku. U suprotnom, algoritam nastavlja s radom.
-Slika\ \ref{fig:segmentation-division} prikazuje navedeni proces podešavanja glavnih grupa za slučaj 9 pronađenih glavnih
-grupa. Stanje prije podešavanja glavnih grupa prikazuje najširu grupu označenu sivom bojom, dok su nakon postupka
-podešavanja sve znamenke označene različitim bojama.\\
+Slika\ \ref{fig:segmentation-division} prikazuje navedeni proces podešavanja glavnih grupa za slučaj 9 pronađenih
+glavnih grupa. Stanje prije podešavanja glavnih grupa prikazuje najširu grupu označenu sivom bojom, dok su nakon
+postupka podešavanja sve znamenke označene različitim bojama.
 \begin{figure}[htb]
-    \centering
-    \includegraphics[width=12cm]{images/chapter4/segmentation-before-division.png}
-    \includegraphics[width=12cm]{images/chapter4/segmentation-after-division.png}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=12cm]{images/chapter4/segmentation-before-division.png}
+        \caption{Prije podešavanja.}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=12cm]{images/chapter4/segmentation-after-division.png}
+        \caption{Nakon podešavanja.}
+    \end{subfigure}
     \caption{\emph{JMBAG} s dvije povezane znamenke prije i nakon podešavanja glavnih grupa piksela.}
     \label{fig:segmentation-division}
 \end{figure}
+\newline
 Sljedeći korak jest pronaći kojim glavnim grupama teže pojedinačne sporedne grupe. Prvo se za svaku glavnu i sporednu
 grupu računa središte $(x_s, y_s)$:\\
-\begin{align*}
-    x_s = \frac{\sum_{n = 1}^{N} x_n}{N}\\
-    y_s = \frac{\sum_{n = 1}^{N} y_n}{N}
-\end{align*}\\
+\begin{align}
+    x_s = \frac{\sum_{n = 1}^{N} x_n}{N}\label{eq:x-center}\\
+    y_s = \frac{\sum_{n = 1}^{N} y_n}{N}\label{eq:y-center}
+\end{align}\\
 gdje je $N$ broj crnih piksela u grupi. Za svako središte glavne grupe $(x_{s_g}, y_{s_g})$ i središte sporedne grupe
 $(x_{s_s}, y_{s_s})$ računa se njihova međusobna \emph{Euklidska} udaljenost:\\
-\begin{equation*}
-    D = \sqrt{(x_{s_g} - x_{s_s})^{2} + (y_{s_g} - y_{s_s})^{2}}
-\end{equation*}\\
+\begin{equation}
+    D = \sqrt{(x_{s_g} - x_{s_s})^{2} + (y_{s_g} - y_{s_s})^{2}}\label{eq:euclidean-distance}
+\end{equation}\\
 te se svaka sporedna grupa pridjeljuje najbližoj glavnoj grupi. Nakon opisanog postupka postojat će 10 grupa piksela
 na temelju kojih se svaka znamenka izdvaja u zasebnu sliku. Slika\ \ref{fig:assigned-minor-groups} prikazuje stanje
 prije i nakon dodjeljivanja sporednih grupa (označenih crnom bojom) glavnim grupama.
 \begin{figure}[htb]
-    \centering
-    \includegraphics[width=12cm]{images/chapter4/unassigned-minor-groups.png}
-    \includegraphics[width=12cm]{images/chapter4/assigned-minor-groups.png}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=12cm]{images/chapter4/unassigned-minor-groups.png}
+        \caption{Prije dodjeljivanja.}
+    \end{subfigure}
+    \begin{subfigure}{\textwidth}
+        \centering
+        \includegraphics[width=12cm]{images/chapter4/assigned-minor-groups.png}
+        \caption{Nakon dodjeljivanja.}
+    \end{subfigure}
     \caption{Glavne i sporedne grupe piksela prije i nakon postupka dodjeljivanja.}
     \label{fig:assigned-minor-groups}
 \end{figure}
+\newpage
 
 
 \section{Klasifikacija}
 \label{sec:klasifikacija}
 Postupkom segmentacije binarizirana slika podijeljena je na pojedinačne slike od kojih svaka sadrži jednu znamenku. Kao
 klasifikator korištena je unaprijedna neuronska mreža s fiksnim brojem ulaza i izlaza, pa je stoga potrebno ulazne slike
-svesti na određen broj značajki. Primjer segmentiranih znamenaka prikazan je na slici\ \ref{fig:segmented}. Segmentirane
-slike su različitih dimenzija te njihov omjer visine i širine nije uvijek $1:1$.
+svesti na određen broj značajki. Primjer segmentiranih znamenaka prikazan je na slici\ \ref{fig:segmented}.
 \begin{figure}[htb]
     \centering
     \frame{\includegraphics[width=1cm]{images/chapter4/segmented-1.png}}
@@ -159,7 +180,9 @@ slike su različitih dimenzija te njihov omjer visine i širine nije uvijek $1:1
     \caption{Pojedinačne slike znamenaka nakon segmentiranja.}
     \label{fig:segmented}
 \end{figure}
-Također se crni pikseli nalaze na samom rubu svake slike. Stoga se segmentirane slike nadopunjavaju na način:
+\newline
+Segmentirane slike su različitih dimenzija te njihov omjer visine i širine nije uvijek $1:1$. Također se crni pikseli
+nalaze na samom rubu svake slike. Stoga se segmentirane slike nadopunjavaju na način:
 \begin{enumerate}
     \item Ako je visina slike veća od njene širine, slici se s lijeve i desne strane dodaju stupci bijelih piksela sve
     dok širina i visine nisu jednake.
@@ -235,11 +258,11 @@ slici\ \ref{fig:features-for-single-digit} za jednu znamenku te na slici\ \ref{f
 \end{figure}
 Na ovaj način dobiveno je ukupno 36 udaljenosti koje se skaliraju na raspon $[0, 1]$ koristeći visinu i širinu slike.
 Ovako skalirane udaljenosti koriste se kao značajke koje su ulaz unaprijedne neuronske mreže. Broj skrivenih slojeva
-neuronske mreže nije fiksan te se može podešavati kod postupka učenja, što je opisano u sljedećem odjeljku. Neuronska
-mreža ima ukupno 10 izlaza, jedan za svaku znamenku u rasponu $[0, 9]$. Vrijednosti svakog od izlaza su uvijek u rasponu
-$[0, 1]$ te se stoga izlazi mreže mogu smatrati kao vjerojatnosti da ulazi predstavljaju svaku od znamenki. Kako bi se
-odredila klasifikacije neke znamenke, uzima se vrijednost najvećeg izlaza mreže te se znamenka dodijeljena tom izlazu
-uzima kao klasifikacija ulazne znamenke.
+neuronske mreže nije fiksan te se može podešavati kod postupka učenja, što je opisano u idućem odjeljku. Neuronska
+mreža ima ukupno deset izlaza, jedan za svaku znamenku u rasponu $[0, 9]$. Vrijednosti svakog od izlaza su uvijek u
+rasponu $[0, 1]$ te se stoga izlazi mreže mogu smatrati kao vjerojatnosti da ulazi predstavljaju svaku od znamenki. Da
+bi se odredila klasifikacija neke znamenke, uzima se vrijednost najvećeg izlaza mreže te se znamenka dodijeljena tom
+izlazu uzima kao klasifikacija ulazne znamenke.
 
 
 \section{Implementacija sustava za raspoznavanje}
@@ -264,6 +287,8 @@ programa koristeći ovu funkciju nad ulaznim slikama bit će obavljen postupak p
 značajki te će pronađene značajke i labele biti spremljene u navedenu datoteku u tekstualnom formatu\footnote{Primjer
 zapisa značajki u ovom formatu dostupan je u
 dodatku\ \ref{ch:primjer-serijaliziranih-podataka-znacajki-slike-i-neuronske-mreze}.}.
+Slika\ \ref{fig:prepare-diagram} prikazuje blok-dijagram implementacije funkcije \texttt{prepare}, dok
+tablica\ \ref{tab:prepare-args} opisuje dostupne argumente te funkcije.
 \begin{table}[htb]
     \caption{Argumenti funkcije \texttt{prepare}.}
     \label{tab:prepare-args}
@@ -291,8 +316,6 @@ dodatku\ \ref{ch:primjer-serijaliziranih-podataka-znacajki-slike-i-neuronske-mre
         \hline
     \end{tabular}
 \end{table}
-Tablica\ \ref{tab:prepare-args} opisuje dostupne argumente funkcije \texttt{prepare}, dok
-slika\ \ref{fig:prepare-diagram} prikazuje blok-dijagram implementacije te funkcije.
 \begin{figure}[htb]
     \centering
     \includegraphics[width=12cm]{images/chapter4/prepare-diagram.pdf}
@@ -302,10 +325,10 @@ slika\ \ref{fig:prepare-diagram} prikazuje blok-dijagram implementacije te funkc
 
 \subsection{Funkcija \texttt{train}}
 \label{subsec:funkcija-train}
-Od sve 4 dostupne funkcije, funkcija \texttt{train} je najkompleksnija i nudi najveći opseg različitih opcija pri
+Od sve četiri dostupne funkcije, funkcija \texttt{train} je najkompleksnija i nudi najveći opseg različitih opcija pri
 pokretanju. Zadatak ove funkcije je učitati sirove slike ili tekstualne značajke slika te koristeći njih trenirati
 novu ili postojeću neuronsku mrežu. Kod stvaranja nove neuronske mreže, težinski faktori bit će inicijalizirani na
-nasumične vrijednosti u rasponu $[-0{,}4, 0{,}4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $36$, izlazni
+nasumične vrijednosti u rasponu $[-0.4, 0.4]$ dok će neuronska mreža uvijek imati ulazni sloj veličine $36$, izlazni
 sloj veličine $10$, te proizvoljan broj i dimenzije skrivenih slojeva. Argumenti koji određuju hoće li se koristiti
 slike ili tekstualne značajke te hoće li se trenirati nova ili postojeća mreža opisani su u
 tablici\ \ref{tab:train-args-1}.
@@ -368,7 +391,7 @@ treniranje neuronske mreže koji su navedeni u tablici\ \ref{tab:train-args-2}.
         \hline
         \texttt{-{}-max-iters \underline{N}} & Pozitivan cijeli broj & Neobavezan argument koji specificira maksimalan
         broj epoha \texttt{\underline{N}} koji će algoritam izvršiti. Ako ovaj argument nije naveden, njegova
-        pretpostavljena vrijednost je $10.000$. \\
+        pretpostavljena vrijednost je $10000$. \\
         \hline
         \texttt{-{}-target-error \underline{E}} & Broj & Neobavezan argument koji specificira stopu greške
         \texttt{\underline{E}} nakon koje će se algoritam zaustaviti. Ako ovaj argument nije naveden, njegova
@@ -451,7 +474,7 @@ dodatku\ \ref{ch:primjeri-ispisa-funkcije-test}.
         primjera uz ime datoteke ispitnog primjera. Ova statistika bit će ispisana zasebno za svaku od navedenih
         neuronskih mreža, osim ako je naveden argument \texttt{-{}-ensemble}. \\
         \hline
-        \texttt{-{}-ensemble} & Ovaj argument će kombinirati sve navedene neuronske mreže je jedan klasifikator tako da
+        \texttt{-{}-ensemble} & Ovaj argument će kombinirati sve navedene neuronske mreže u jedan klasifikator tako da
         se izlazi svih neuronskih mreža međusobno zbrajaju. Kada je ovaj argument naveden sve ostale statistike bit će
         ispisane samo jednom, kao da je navedena samo jedna neuronska mreža. \\
         \hline

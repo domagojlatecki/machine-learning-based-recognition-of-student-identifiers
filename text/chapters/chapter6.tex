@@ -2,13 +2,13 @@
 \label{ch:zakljucak}
 Raspoznavanje rukom pisanih brojeva je problem koji je već značajno istražen i postoje mnogi pristupi koji nude razne
 vrijednosti točnosti klasifikacije. Prije samog postupka klasifikacije potrebno je obraditi ulazne slike tako da se
-provede binarizacija slike koja znatno olakšava sljedeće faze raspoznavanja znamenaka. Potrebno je posvetiti posebnu
-pažnju na postupak segmentacije jer on značajno utječe na rezultate klasifikacije jer se greške kod segmentacije šalju
-dalje kroz klasifikator. Stoga se preporučuje koristiti neki od algoritama strojnog učenja umjesto determinističkog
-algoritma za segmentaciju. Za postupak klasifikacije potrebno je odabrati značajke koje dovoljno dobro opisuju razlike
-među pojedinim brojevima. Čak i male sličnosti među značajkama dvije različite znamenke mogu prouzročiti greške u
-klasifikaciji. Unaprijedna neuronska mreža pokazala se moćnim alatom strojnog učenja koji omogućuje učenje gradijentnim
-spustom. Neuronska mreža korištena u ovom radu također nudi vjerojatnosnu interpretaciju izlaznih vrijednosti
-klasifikacije, pa se stoga pomoću nje mogu sagraditi napredniji sustavi koji koriste izlaze neuronske mreže kao povratnu
-informaciju pri postupku segmentacije. U tom slučaju se pri postupku segmentacije pokušava maksimizirati vjerojatnost
-svake pojedine znamenke što će uzrokovati boje rezultate klasifikacije.
+provede binarizacija slike koja znatno olakšava iduće faze raspoznavanja znamenaka. Potrebno je posvetiti posebnu
+pažnju na postupak segmentacije jer on značajno utječe na rezultate klasifikacije jer se greške kod segmentacije
+propagiraju dalje kroz klasifikator. Stoga se preporučuje koristiti neki od algoritama strojnog učenja umjesto
+determinističkog algoritma za segmentaciju. Za postupak klasifikacije potrebno je odabrati značajke koje dovoljno dobro
+opisuju razlike među pojedinim brojevima. Čak i male sličnosti među značajkama dvije različite znamenke mogu prouzročiti
+greške u klasifikaciji. Unaprijedna neuronska mreža pokazala se moćnim alatom strojnog učenja koji omogućuje učenje
+gradijentnim spustom. Neuronska mreža korištena u ovom radu također nudi vjerojatnosnu interpretaciju izlaznih
+vrijednosti klasifikacije, pa se stoga pomoću nje mogu sagraditi napredniji sustavi koji koriste izlaze neuronske mreže
+kao povratnu informaciju pri postupku segmentacije. U tom slučaju se pri postupku segmentacije pokušava maksimizirati
+vjerojatnost svake pojedine znamenke što će uzrokovati boje rezultate klasifikacije.
